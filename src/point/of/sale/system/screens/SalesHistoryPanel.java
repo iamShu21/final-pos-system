@@ -23,9 +23,14 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
+import javax.swing.JPasswordField;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -37,14 +42,18 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Cursor;
+import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Frame;
+import java.awt.GridLayout;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.Window;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.BorderFactory;
@@ -56,6 +65,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JViewport;
 import javax.swing.border.CompoundBorder;
@@ -66,6 +76,7 @@ import javax.swing.plaf.basic.BasicScrollBarUI;
 import javax.swing.table.JTableHeader;
 import point.of.sale.system.classes.GlassPanel;
 import point.of.sale.system.classes.RoundedPanel;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class SalesHistoryPanel extends javax.swing.JPanel {
 
@@ -74,6 +85,8 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
     private final List<SalesRecord> allSalesRecords = new ArrayList<SalesRecord>();
     private final List<SalesRecord> filteredSalesRecords = new ArrayList<SalesRecord>();
     private DefaultTableModel tableModel;
+    private String currentLoggedInUsername = "";
+    private String currentLoggedInUserRole = "";
 
     private final SimpleDateFormat tableDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss a");
     private final SimpleDateFormat fileDateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -88,6 +101,7 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
         loadSalesDataFromDatabase();
         loadCashierList();
         setupFilters();
+        setupTableContextMenu();
         applyFilters();
 
     }
@@ -147,6 +161,19 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
         tblSalesTransaction.setRowHeight(42);
 
         enhanceTable(tblSalesTransaction, tableScrollPane);
+    }
+
+    public void setLoggedInUserInfo(String username, String userRole) {
+        this.currentLoggedInUsername = username == null ? "" : username;
+        this.currentLoggedInUserRole = userRole == null ? "" : userRole;
+    }
+
+    private boolean isCurrentUserCashier() {
+        return "Cashier".equalsIgnoreCase(currentLoggedInUserRole);
+    }
+
+    private String getApproverRoleForCurrentUser() {
+        return currentLoggedInUserRole == null ? "" : currentLoggedInUserRole;
     }
 
     private void loadSalesDataFromDatabase() {
@@ -990,6 +1017,470 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
         updateSummaryCards();
     }
 
+    private void setupTableContextMenu() {
+        tblSalesTransaction.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                showSalesHistoryPopup(e);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                showSalesHistoryPopup(e);
+            }
+        });
+    }
+
+    private void showSalesHistoryPopup(MouseEvent e) {
+        if (!e.isPopupTrigger()) {
+            return;
+        }
+
+        int row = tblSalesTransaction.rowAtPoint(e.getPoint());
+        if (row < 0) {
+            return;
+        }
+
+        if (!tblSalesTransaction.isRowSelected(row)) {
+            tblSalesTransaction.setRowSelectionInterval(row, row);
+        }
+
+        JPopupMenu popup = new JPopupMenu();
+
+        JMenuItem viewReceipt = new JMenuItem("View Receipt");
+        JMenuItem refund = new JMenuItem("Refund");
+        JMenuItem voidTransaction = new JMenuItem("Void Transaction");
+
+        viewReceipt.addActionListener(action -> handleViewReceiptAction());
+        refund.addActionListener(action -> handleRefundAction());
+        voidTransaction.addActionListener(action -> handleVoidTransactionAction());
+
+        popup.add(viewReceipt);
+        popup.add(refund);
+        popup.add(voidTransaction);
+        popup.show(e.getComponent(), e.getX(), e.getY());
+    }
+
+    private void handleViewReceiptAction() {
+        int selectedRow = tblSalesTransaction.getSelectedRow();
+        if (selectedRow < 0) {
+            JOptionPane.showMessageDialog(this, "No transaction selected.");
+            return;
+        }
+
+        int modelRow = tblSalesTransaction.convertRowIndexToModel(selectedRow);
+        if (modelRow < 0 || modelRow >= filteredSalesRecords.size()) {
+            JOptionPane.showMessageDialog(this, "No transaction selected.");
+            return;
+        }
+
+        SalesRecord record = filteredSalesRecords.get(modelRow);
+        showReceiptDetails(record);
+    }
+
+    private void handleRefundAction() {
+        int selectedRow = tblSalesTransaction.getSelectedRow();
+        if (selectedRow < 0) {
+            JOptionPane.showMessageDialog(this, "No transaction selected.");
+            return;
+        }
+
+        if (!canModifySaleHistory()) {
+            JOptionPane.showMessageDialog(this, "Access denied.");
+            return;
+        }
+
+        int modelRow = tblSalesTransaction.convertRowIndexToModel(selectedRow);
+        if (modelRow < 0 || modelRow >= filteredSalesRecords.size()) {
+            JOptionPane.showMessageDialog(this, "No transaction selected.");
+            return;
+        }
+
+        SalesRecord record = filteredSalesRecords.get(modelRow);
+        if (!confirmAction("refund")) {
+            return;
+        }
+
+        try {
+            String currentStatus = getSaleStatus(record.saleId);
+            if (currentStatus != null && ("VOIDED".equalsIgnoreCase(currentStatus) || "REFUNDED".equalsIgnoreCase(currentStatus))) {
+                JOptionPane.showMessageDialog(this, "This transaction is already " + currentStatus + ".");
+                return;
+            }
+
+            performSaleStatusUpdate(record, "REFUNDED");
+            insertUserLog(currentLoggedInUsername, currentLoggedInUserRole,
+                    "Refunded transaction " + record.invoiceNumber + " by " + currentLoggedInUsername);
+            refreshAfterSaleAction();
+            JOptionPane.showMessageDialog(this, "Transaction refunded successfully.");
+        } catch (SQLException ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Refund action failed", ex);
+            JOptionPane.showMessageDialog(this, "Unable to refund transaction: " + ex.getMessage());
+        }
+    }
+
+    private void handleVoidTransactionAction() {
+        int selectedRow = tblSalesTransaction.getSelectedRow();
+        if (selectedRow < 0) {
+            JOptionPane.showMessageDialog(this, "No transaction selected.");
+            return;
+        }
+
+        if (!canModifySaleHistory()) {
+            JOptionPane.showMessageDialog(this, "Access denied.");
+            return;
+        }
+
+        int modelRow = tblSalesTransaction.convertRowIndexToModel(selectedRow);
+        if (modelRow < 0 || modelRow >= filteredSalesRecords.size()) {
+            JOptionPane.showMessageDialog(this, "No transaction selected.");
+            return;
+        }
+
+        SalesRecord record = filteredSalesRecords.get(modelRow);
+        if (!confirmAction("void")) {
+            return;
+        }
+
+        try {
+            String currentStatus = getSaleStatus(record.saleId);
+            if (currentStatus != null && ("VOIDED".equalsIgnoreCase(currentStatus) || "REFUNDED".equalsIgnoreCase(currentStatus))) {
+                JOptionPane.showMessageDialog(this, "This transaction is already " + currentStatus + ".");
+                return;
+            }
+
+            performSaleStatusUpdate(record, "VOIDED");
+            insertUserLog(currentLoggedInUsername, currentLoggedInUserRole,
+                    "Voided transaction " + record.invoiceNumber + " by " + currentLoggedInUsername);
+            refreshAfterSaleAction();
+            JOptionPane.showMessageDialog(this, "Transaction voided successfully.");
+        } catch (SQLException ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Void action failed", ex);
+            JOptionPane.showMessageDialog(this, "Unable to void transaction: " + ex.getMessage());
+        }
+    }
+
+    private boolean requestApproval(String actionType) {
+        final boolean[] approved = {false};
+
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        JDialog dialog;
+
+        if (owner instanceof Frame) {
+            dialog = new JDialog((Frame) owner, actionType + " Approval", true);
+        } else if (owner instanceof Dialog) {
+            dialog = new JDialog((Dialog) owner, actionType + " Approval", true);
+        } else {
+            dialog = new JDialog((Frame) null, actionType + " Approval", true);
+        }
+
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+
+        JPanel content = new JPanel(new GridLayout(2, 2, 10, 10));
+        content.setBorder(new EmptyBorder(15, 15, 15, 15));
+
+        JLabel lblUsername = new JLabel("Approver Username:");
+        JTextField txtUsername = new JTextField();
+
+        JLabel lblPassword = new JLabel("Approver Password:");
+        JPasswordField txtPassword = new JPasswordField();
+
+        content.add(lblUsername);
+        content.add(txtUsername);
+        content.add(lblPassword);
+        content.add(txtPassword);
+
+        JButton btnApprove = new JButton("Approve");
+        JButton btnCancel = new JButton("Cancel");
+
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 10, 0));
+        buttonPanel.add(btnCancel);
+        buttonPanel.add(btnApprove);
+
+        JPanel root = new JPanel(new BorderLayout());
+        root.add(content, BorderLayout.CENTER);
+        root.add(buttonPanel, BorderLayout.SOUTH);
+
+        dialog.setContentPane(root);
+        dialog.pack();
+        dialog.setResizable(false);
+        dialog.setLocationRelativeTo(this);
+
+        btnApprove.addActionListener(e -> {
+            String approverUsername = txtUsername.getText().trim();
+            String approverPassword = new String(txtPassword.getPassword()).trim();
+
+            if (approverUsername.isEmpty() || approverPassword.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Username and password are required.");
+                return;
+            }
+
+            if (approverUsername.equalsIgnoreCase(currentLoggedInUsername)) {
+                insertUserLog(approverUsername, "",
+                        actionType + " approval denied: cashier self-approval attempt");
+                JOptionPane.showMessageDialog(dialog, "Cashiers cannot approve their own actions.");
+                return;
+            }
+
+            String approverRole = validateApproverCredentials(approverUsername, approverPassword);
+            if (approverRole == null) {
+                insertUserLog(approverUsername, "",
+                        actionType + " approval denied: invalid credentials or insufficient privileges");
+                return;
+            }
+
+            insertUserLog(approverUsername, approverRole,
+                    actionType + " approved by " + approverUsername);
+            approved[0] = true;
+            dialog.dispose();
+        });
+
+        btnCancel.addActionListener(e -> {
+            insertUserLog(currentLoggedInUsername, currentLoggedInUserRole,
+                    actionType + " approval cancelled by " + currentLoggedInUsername);
+            dialog.dispose();
+        });
+
+        dialog.setVisible(true);
+        return approved[0];
+    }
+
+    private String validateApproverCredentials(String username, String password) {
+        String sql = "SELECT role, password, status FROM users WHERE username = ? LIMIT 1";
+
+        try (Connection con = DBConnection.dbConnection(); PreparedStatement pst = con.prepareStatement(sql)) {
+
+            pst.setString(1, username);
+            try (ResultSet rs = pst.executeQuery()) {
+                if (!rs.next()) {
+                    JOptionPane.showMessageDialog(this, "Approver credentials are invalid.");
+                    return null;
+                }
+
+                String role = rs.getString("role");
+                String storedPassword = rs.getString("password");
+                String status = rs.getString("status");
+                boolean passwordMatches;
+
+                if (storedPassword != null && storedPassword.startsWith("$2a$")) {
+                    passwordMatches = BCrypt.checkpw(password, storedPassword);
+                } else {
+                    passwordMatches = password.equals(storedPassword);
+                }
+
+                if (!passwordMatches) {
+                    JOptionPane.showMessageDialog(this, "Approver credentials are invalid.");
+                    return null;
+                }
+
+                if (!"Active".equalsIgnoreCase(status)) {
+                    JOptionPane.showMessageDialog(this, "Approver account is not active.");
+                    return null;
+                }
+
+                if (!"Manager".equalsIgnoreCase(role) && !"Super Admin".equalsIgnoreCase(role)) {
+                    JOptionPane.showMessageDialog(this, "Approver must be a Manager or Super Admin.");
+                    return null;
+                }
+
+                return role;
+            }
+        } catch (SQLException ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Approver validation error", ex);
+            JOptionPane.showMessageDialog(this, "Unable to validate approver credentials: " + ex.getMessage());
+            return null;
+        }
+    }
+
+    private void insertUserLog(String username, String userRole, String action) {
+        String sql = "INSERT INTO user_logs (username, user_role, action) VALUES (?, ?, ?)";
+
+        try (Connection con = DBConnection.dbConnection(); PreparedStatement pst = con.prepareStatement(sql)) {
+            pst.setString(1, username);
+            pst.setString(2, userRole);
+            pst.setString(3, action);
+            pst.executeUpdate();
+        } catch (SQLException ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Failed to insert user log", ex);
+        }
+    }
+
+    private boolean canModifySaleHistory() {
+        return "Manager".equalsIgnoreCase(currentLoggedInUserRole)
+                || "Super Admin".equalsIgnoreCase(currentLoggedInUserRole);
+    }
+
+    private boolean confirmAction(String actionName) {
+        int result = JOptionPane.showConfirmDialog(this,
+                "Are you sure you want to " + actionName + " the selected transaction?",
+                "Confirm " + actionName.substring(0, 1).toUpperCase() + actionName.substring(1),
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
+        return result == JOptionPane.YES_OPTION;
+    }
+
+    private String getSaleStatus(int saleId) throws SQLException {
+        String sql = "SELECT status FROM sales WHERE sale_id = ? LIMIT 1";
+        try (Connection con = DBConnection.dbConnection(); PreparedStatement pst = con.prepareStatement(sql)) {
+            pst.setInt(1, saleId);
+            try (ResultSet rs = pst.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("status");
+                }
+            }
+        }
+        return null;
+    }
+
+    private void performSaleStatusUpdate(SalesRecord record, String newStatus) throws SQLException {
+        Connection con = null;
+        try {
+            con = DBConnection.dbConnection();
+            con.setAutoCommit(false);
+
+            if (!restoreStocksForSale(con, record.saleId)) {
+                con.rollback();
+                throw new SQLException("Failed to restore stock for sale " + record.saleId);
+            }
+
+            String updateSaleSql = "UPDATE sales SET status = ? WHERE sale_id = ?";
+            try (PreparedStatement pst = con.prepareStatement(updateSaleSql)) {
+                pst.setString(1, newStatus);
+                pst.setInt(2, record.saleId);
+                int rows = pst.executeUpdate();
+                if (rows == 0) {
+                    con.rollback();
+                    throw new SQLException("Sale not found for update.");
+                }
+            }
+
+            con.commit();
+        } catch (SQLException ex) {
+            if (con != null) {
+                try {
+                    con.rollback();
+                } catch (SQLException rollbackEx) {
+                    logger.log(java.util.logging.Level.SEVERE, "Rollback failed", rollbackEx);
+                }
+            }
+            throw ex;
+        } finally {
+            if (con != null) {
+                try {
+                    con.setAutoCommit(true);
+                    con.close();
+                } catch (SQLException ex) {
+                    logger.log(java.util.logging.Level.SEVERE, "Failed to close connection", ex);
+                }
+            }
+        }
+    }
+
+    private boolean restoreStocksForSale(Connection con, int saleId) throws SQLException {
+        String detailsSql = "SELECT product_id, quantity FROM sales_details WHERE sale_id = ?";
+        try (PreparedStatement pstDetails = con.prepareStatement(detailsSql)) {
+            pstDetails.setInt(1, saleId);
+            try (ResultSet rs = pstDetails.executeQuery()) {
+                while (rs.next()) {
+                    int productId = rs.getInt("product_id");
+                    int quantity = rs.getInt("quantity");
+                    if (quantity <= 0) {
+                        continue;
+                    }
+
+                    String updateStockSql = "UPDATE products SET stock_quantity = stock_quantity + ? WHERE product_id = ?";
+                    try (PreparedStatement pstUpdate = con.prepareStatement(updateStockSql)) {
+                        pstUpdate.setInt(1, quantity);
+                        pstUpdate.setInt(2, productId);
+                        int rows = pstUpdate.executeUpdate();
+                        if (rows == 0) {
+                            throw new SQLException("Product not found while restoring stock: " + productId);
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    private void refreshAfterSaleAction() {
+        resetAndRefreshSalesHistory();
+    }
+
+    private void showReceiptDetails(SalesRecord record) {
+        if (record == null) {
+            JOptionPane.showMessageDialog(this, "No transaction selected.");
+            return;
+        }
+
+        String headerSql = "SELECT s.invoice_number, s.sale_date, s.subtotal, s.vat, s.discount, "
+                + "s.total_amount, s.payment_method, s.cash_tendered, s.change_amount, "
+                + "TRIM(CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(NULLIF(u.middle_name, ''), ''), "
+                + "CASE WHEN COALESCE(NULLIF(u.middle_name, ''), '') = '' THEN '' ELSE ' ' END, COALESCE(u.last_name, ''))) "
+                + "AS cashier "
+                + "FROM sales s "
+                + "INNER JOIN users u ON s.user_id = u.user_id "
+                + "WHERE s.sale_id = ?";
+
+        String detailsSql = "SELECT COALESCE(p.name, '') AS product_name, sd.quantity, sd.price, sd.discount, sd.subtotal "
+                + "FROM sales_details sd "
+                + "LEFT JOIN products p ON sd.product_id = p.product_id "
+                + "WHERE sd.sale_id = ?";
+
+        StringBuilder receiptText = new StringBuilder();
+
+        try (Connection con = DBConnection.dbConnection(); PreparedStatement pstHeader = con.prepareStatement(headerSql); PreparedStatement pstDetails = con.prepareStatement(detailsSql)) {
+
+            pstHeader.setInt(1, record.saleId);
+            try (ResultSet rsHeader = pstHeader.executeQuery()) {
+                if (rsHeader.next()) {
+                    receiptText.append("INVOICE: ").append(nullToEmpty(rsHeader.getString("invoice_number"))).append("\n");
+                    receiptText.append("Date: ").append(formatTableDate(rsHeader.getTimestamp("sale_date"))).append("\n");
+                    receiptText.append("Cashier: ").append(nullToEmpty(rsHeader.getString("cashier"))).append("\n");
+                    receiptText.append("Payment Method: ").append(nullToEmpty(rsHeader.getString("payment_method"))).append("\n");
+                    receiptText.append("Subtotal: ").append(formatPeso(rsHeader.getDouble("subtotal"))).append("\n");
+                    receiptText.append("VAT: ").append(formatPeso(rsHeader.getDouble("vat"))).append("\n");
+                    receiptText.append("Discount: ").append(formatPeso(rsHeader.getDouble("discount"))).append("\n");
+                    receiptText.append("Total: ").append(formatPeso(rsHeader.getDouble("total_amount"))).append("\n");
+                    receiptText.append("Cash Tendered: ").append(formatPeso(rsHeader.getDouble("cash_tendered"))).append("\n");
+                    receiptText.append("Change: ").append(formatPeso(rsHeader.getDouble("change_amount"))).append("\n\n");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Transaction details not found.");
+                    return;
+                }
+            }
+
+            pstDetails.setInt(1, record.saleId);
+            try (ResultSet rsDetails = pstDetails.executeQuery()) {
+                receiptText.append("Item\tQty\tPrice\tDiscount\tSubtotal\n");
+                receiptText.append("-------------------------------------------------------------\n");
+                while (rsDetails.next()) {
+                    String itemName = rsDetails.getString("product_name");
+                    int qty = rsDetails.getInt("quantity");
+                    double price = rsDetails.getDouble("price");
+                    double discount = rsDetails.getDouble("discount");
+                    double subtotal = rsDetails.getDouble("subtotal");
+                    receiptText.append(itemName).append("\t")
+                            .append(qty).append("\t")
+                            .append(formatPeso(price)).append("\t")
+                            .append(formatPeso(discount)).append("\t")
+                            .append(formatPeso(subtotal)).append("\n");
+                }
+            }
+        } catch (SQLException ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Error loading receipt details", ex);
+            JOptionPane.showMessageDialog(this, "Unable to load receipt details: " + ex.getMessage());
+            return;
+        }
+
+        JTextArea textArea = new JTextArea(receiptText.toString());
+        textArea.setEditable(false);
+        textArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        textArea.setCaretPosition(0);
+
+        JOptionPane.showMessageDialog(this, new JScrollPane(textArea), "Receipt Details", JOptionPane.INFORMATION_MESSAGE);
+    }
+
     private boolean isWithinDateRange(Date saleDate, Date fromDate, Date toDate) {
         if (saleDate == null) {
             return false;
@@ -1433,18 +1924,22 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
         pnlFilters.add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 80, -1));
 
         jLabel7.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        jLabel7.setForeground(new java.awt.Color(40, 55, 80));
         jLabel7.setText("Invoice Number");
         pnlFilters.add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(760, 50, -1, -1));
 
         jLabel8.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        jLabel8.setForeground(new java.awt.Color(40, 55, 80));
         jLabel8.setText("Date From");
         pnlFilters.add(jLabel8, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 50, -1, -1));
 
         jLabel9.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        jLabel9.setForeground(new java.awt.Color(40, 55, 80));
         jLabel9.setText("Date To");
         pnlFilters.add(jLabel9, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 50, -1, -1));
 
         jLabel10.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        jLabel10.setForeground(new java.awt.Color(40, 55, 80));
         jLabel10.setText("Cashier");
         pnlFilters.add(jLabel10, new org.netbeans.lib.awtextra.AbsoluteConstraints(470, 50, -1, -1));
         pnlFilters.add(dateFrom, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 70, 160, 30));

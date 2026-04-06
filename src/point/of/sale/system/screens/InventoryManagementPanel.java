@@ -41,6 +41,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JViewport;
 import javax.swing.SwingConstants;
+import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -123,8 +124,9 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         styleButton(btnSaveStockOut, new Color(59, 118, 255));
         installRoundedButtonPainter(btnSaveStockOut);
 
-        styleButton(btnRefresh, new Color(59, 74, 92));
+        styleButton(btnRefresh, new Color(89, 92, 255));
         installRoundedButtonPainter(btnRefresh);
+        hookRefreshButton();
 
         enhanceTable(table, jScrollPane3);
         
@@ -1660,7 +1662,7 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         btnRefresh.setForeground(new java.awt.Color(255, 255, 255));
         btnRefresh.setText("Refresh");
         btnRefresh.addActionListener(this::btnRefreshActionPerformed);
-        pnlBasta.add(btnRefresh, new org.netbeans.lib.awtextra.AbsoluteConstraints(590, 30, 90, 30));
+        pnlBasta.add(btnRefresh, new org.netbeans.lib.awtextra.AbsoluteConstraints(590, 40, 90, 30));
 
         add(pnlBasta, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 150, 710, 100));
         add(pnlAlert, new org.netbeans.lib.awtextra.AbsoluteConstraints(830, 10, 280, 130));
@@ -1686,9 +1688,35 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         // TODO add your handling code here:
     }//GEN-LAST:event_cmbStockInProductActionPerformed
 
+    private void hookRefreshButton() {
+        if (btnRefresh != null) {
+            btnRefresh.addActionListener(e -> {
+                animateRefreshButton();
+                loadAllInventoryData();
+                generateNextReferenceNumber();
+            });
+        }
+    }
+
+    private void animateRefreshButton() {
+        final int[] step = {0};
+        Timer timer = new Timer(20, null);
+        timer.addActionListener(e -> {
+            step[0]++;
+            float t = step[0] / 18f;
+            int pad = (int) (Math.sin(t * Math.PI) * 4);
+            btnRefresh.setBorder(new javax.swing.border.EmptyBorder(10 - pad, 18, 10 + pad, 18));
+            btnRefresh.repaint();
+            if (step[0] >= 18) {
+                timer.stop();
+                btnRefresh.setBorder(new javax.swing.border.EmptyBorder(10, 18, 10, 18));
+                btnRefresh.repaint();
+            }
+        });
+        timer.start();
+    }
+
     private void btnRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRefreshActionPerformed
-        loadAllInventoryData();
-        generateNextReferenceNumber();
     }//GEN-LAST:event_btnRefreshActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

@@ -21,6 +21,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
+import javax.swing.Timer;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
@@ -90,6 +91,42 @@ public class DashboardPanel extends javax.swing.JPanel {
         styleDashboardLabels();
         styleSummaryCards();
         styleChartContainers();
+        styleRefreshButton();
+    }
+
+    private void styleRefreshButton() {
+        if (btnRefresh != null) {
+            styleButton(btnRefresh, new Color(89, 92, 255));
+            installRoundedButtonPainter(btnRefresh);
+            hookRefreshButton();
+        }
+    }
+
+    private void hookRefreshButton() {
+        if (btnRefresh != null) {
+            btnRefresh.addActionListener(e -> {
+                animateRefreshButton();
+                loadDashboardData();
+            });
+        }
+    }
+
+    private void animateRefreshButton() {
+        final int[] step = {0};
+        Timer timer = new Timer(20, null);
+        timer.addActionListener(e -> {
+            step[0]++;
+            float t = step[0] / 18f;
+            int pad = (int) (Math.sin(t * Math.PI) * 4);
+            btnRefresh.setBorder(new javax.swing.border.EmptyBorder(10 - pad, 18, 10 + pad, 18));
+            btnRefresh.repaint();
+            if (step[0] >= 18) {
+                timer.stop();
+                btnRefresh.setBorder(new javax.swing.border.EmptyBorder(10, 18, 10, 18));
+                btnRefresh.repaint();
+            }
+        });
+        timer.start();
     }
 
     private void styleDashboardLabels() {
@@ -282,9 +319,9 @@ public class DashboardPanel extends javax.swing.JPanel {
             setTrendLabel(trendWithAutomatedValue4, totalUsers, previousUsers, false);
 
             double salesToday = getDoubleValue(conn,
-                    "SELECT COALESCE(SUM(total_amount), 0) FROM sales WHERE DATE(sale_date) = CURDATE()");
+                    "SELECT COALESCE(SUM(total_amount), 0) FROM sales WHERE DATE(sale_date) = CURDATE() AND (status IS NULL OR status = 'COMPLETED' OR status = '')");
             double salesYesterday = getDoubleValue(conn,
-                    "SELECT COALESCE(SUM(total_amount), 0) FROM sales WHERE DATE(sale_date) = CURDATE() - INTERVAL 1 DAY");
+                    "SELECT COALESCE(SUM(total_amount), 0) FROM sales WHERE DATE(sale_date) = CURDATE() - INTERVAL 1 DAY AND (status IS NULL OR status = 'COMPLETED' OR status = '')");
             autoNumber5.setText(moneyFormat.format(salesToday));
             setTrendLabel(trendWithAutomatedValue5, salesToday, salesYesterday, true);
 
@@ -329,7 +366,7 @@ public class DashboardPanel extends javax.swing.JPanel {
             String sql
                     = "SELECT DAYOFWEEK(sale_date) AS day_no, COALESCE(SUM(total_amount), 0) AS total "
                     + "FROM sales "
-                    + "WHERE YEARWEEK(sale_date, 1) = YEARWEEK(CURDATE(), 1) "
+                    + "WHERE YEARWEEK(sale_date, 1) = YEARWEEK(CURDATE(), 1) AND (status IS NULL OR status = 'COMPLETED' OR status = '') "
                     + "GROUP BY DAYOFWEEK(sale_date) "
                     + "ORDER BY DAYOFWEEK(sale_date)";
 
@@ -425,7 +462,7 @@ public class DashboardPanel extends javax.swing.JPanel {
                     + "       MONTH(sale_date) AS month_no, "
                     + "       COALESCE(SUM(total_amount), 0) AS total "
                     + "FROM sales "
-                    + "WHERE sale_date >= DATE_SUB(CURDATE(), INTERVAL 5 MONTH) "
+                    + "WHERE sale_date >= DATE_SUB(CURDATE(), INTERVAL 5 MONTH) AND (status IS NULL OR status = 'COMPLETED' OR status = '') "
                     + "GROUP BY YEAR(sale_date), MONTH(sale_date), DATE_FORMAT(sale_date, '%b') "
                     + "ORDER BY YEAR(sale_date), MONTH(sale_date)";
 
@@ -510,7 +547,9 @@ public class DashboardPanel extends javax.swing.JPanel {
 
             String sql = "SELECT p.name, SUM(sd.quantity) AS total_qty "
                     + "FROM sales_details sd "
+                    + "JOIN sales s ON sd.sale_id = s.sale_id "
                     + "JOIN products p ON sd.product_id = p.product_id "
+                    + "WHERE s.status IS NULL OR s.status = 'COMPLETED' OR s.status = '' "
                     + "GROUP BY p.product_id, p.name "
                     + "ORDER BY total_qty DESC "
                     + "LIMIT 5";
@@ -810,6 +849,7 @@ public class DashboardPanel extends javax.swing.JPanel {
         pnlDailySalesChart = new javax.swing.JPanel();
         jSeparator3 = new javax.swing.JSeparator();
         jSeparator1 = new javax.swing.JSeparator();
+        btnRefresh = new javax.swing.JButton();
 
         setBackground(new java.awt.Color(240, 248, 255));
         setPreferredSize(new java.awt.Dimension(1120, 820));
@@ -1063,6 +1103,12 @@ public class DashboardPanel extends javax.swing.JPanel {
         jSeparator1.setForeground(new java.awt.Color(0, 0, 0));
         jSeparator1.setOrientation(javax.swing.SwingConstants.VERTICAL);
         add(jSeparator1, new org.netbeans.lib.awtextra.AbsoluteConstraints(1100, 40, 20, 90));
+
+        btnRefresh.setBackground(new java.awt.Color(44, 62, 80));
+        btnRefresh.setFont(new java.awt.Font("Tahoma", 1, 14));
+        btnRefresh.setForeground(new java.awt.Color(255, 255, 255));
+        btnRefresh.setText("Refresh");
+        add(btnRefresh, new org.netbeans.lib.awtextra.AbsoluteConstraints(980, 70, 90, 30));
     }// </editor-fold>//GEN-END:initComponents
 
     private void productsCardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_productsCardMouseClicked
@@ -1120,6 +1166,8 @@ public class DashboardPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_stocksCardMouseClicked
 
 
+
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel autoNumber;
     private javax.swing.JLabel autoNumber1;
@@ -1127,6 +1175,156 @@ public class DashboardPanel extends javax.swing.JPanel {
     private javax.swing.JLabel autoNumber3;
     private javax.swing.JLabel autoNumber4;
     private javax.swing.JLabel autoNumber5;
+    private javax.swing.JButton btnRefresh;
+
+    private void styleButton(javax.swing.JButton button, java.awt.Color baseColor) {
+        if (button == null) {
+            return;
+        }
+
+        java.awt.Color hoverColor = new java.awt.Color(
+                Math.min(baseColor.getRed() + 15, 255),
+                Math.min(baseColor.getGreen() + 15, 255),
+                Math.min(baseColor.getBlue() + 15, 255)
+        );
+
+        java.awt.Color pressColor = new java.awt.Color(
+                Math.max(baseColor.getRed() - 15, 0),
+                Math.max(baseColor.getGreen() - 15, 0),
+                Math.max(baseColor.getBlue() - 15, 0)
+        );
+
+        java.awt.Color disabledBg = new java.awt.Color(200, 210, 225);
+        java.awt.Color disabledFg = new java.awt.Color(120, 130, 150);
+
+        button.setFont(new java.awt.Font("Tahoma", java.awt.Font.BOLD, 13));
+        button.setForeground(java.awt.Color.WHITE);
+        button.setBackground(baseColor);
+        button.setFocusPainted(false);
+        button.setBorder(new javax.swing.border.EmptyBorder(6, 14, 6, 14));
+        button.setContentAreaFilled(false);
+        button.setOpaque(false);
+        button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+
+        button.putClientProperty("btnBaseColor", baseColor);
+        button.putClientProperty("btnHoverColor", hoverColor);
+        button.putClientProperty("btnPressColor", pressColor);
+        button.putClientProperty("btnDisabledBg", disabledBg);
+        button.putClientProperty("btnDisabledFg", disabledFg);
+        button.putClientProperty("btnColor", baseColor);
+
+        for (java.awt.event.MouseListener ml : button.getMouseListeners()) {
+            button.removeMouseListener(ml);
+        }
+
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                if (!button.isEnabled()) {
+                    return;
+                }
+                button.putClientProperty("btnColor", hoverColor);
+                button.repaint();
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                if (!button.isEnabled()) {
+                    return;
+                }
+                button.putClientProperty("btnColor", baseColor);
+                button.repaint();
+            }
+
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                if (!button.isEnabled()) {
+                    return;
+                }
+                button.putClientProperty("btnColor", pressColor);
+                button.repaint();
+            }
+
+            @Override
+            public void mouseReleased(java.awt.event.MouseEvent e) {
+                if (!button.isEnabled()) {
+                    return;
+                }
+                button.putClientProperty("btnColor", hoverColor);
+                button.repaint();
+            }
+        });
+
+        button.addPropertyChangeListener("enabled", evt -> {
+            if (button.isEnabled()) {
+                button.putClientProperty("btnColor", baseColor);
+                button.setForeground(java.awt.Color.WHITE);
+                button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+            } else {
+                button.putClientProperty("btnColor", disabledBg);
+                button.setForeground(disabledFg);
+                button.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+            }
+            button.repaint();
+        });
+
+        if (!button.isEnabled()) {
+            button.putClientProperty("btnColor", disabledBg);
+            button.setForeground(disabledFg);
+            button.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        }
+    }
+
+    private void installRoundedButtonPainter(javax.swing.JButton button) {
+        if (button == null) {
+            return;
+        }
+
+        button.setUI(new javax.swing.plaf.basic.BasicButtonUI() {
+            @Override
+            public void paint(java.awt.Graphics g, javax.swing.JComponent c) {
+                javax.swing.JButton b = (javax.swing.JButton) c;
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING,
+                        java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+
+                java.awt.Color bg;
+                java.awt.Color fg;
+
+                if (!b.isEnabled()) {
+                    bg = (java.awt.Color) b.getClientProperty("btnDisabledBg");
+                    fg = (java.awt.Color) b.getClientProperty("btnDisabledFg");
+                    if (bg == null) {
+                        bg = new java.awt.Color(200, 210, 225);
+                    }
+                    if (fg == null) {
+                        fg = new java.awt.Color(120, 130, 150);
+                    }
+                } else {
+                    bg = (java.awt.Color) b.getClientProperty("btnColor");
+                    fg = b.getForeground();
+                    if (bg == null) {
+                        bg = b.getBackground();
+                    }
+                }
+
+                g2.setColor(bg);
+                g2.fillRoundRect(0, 0, b.getWidth(), b.getHeight(), 16, 16);
+
+                g2.setColor(new java.awt.Color(255, 255, 255, 60));
+                g2.drawRoundRect(0, 0, b.getWidth() - 1, b.getHeight() - 1, 16, 16);
+
+                g2.setFont(b.getFont());
+                java.awt.FontMetrics fm = g2.getFontMetrics();
+                int x = (b.getWidth() - fm.stringWidth(b.getText())) / 2;
+                int y = ((b.getHeight() - fm.getHeight()) / 2) + fm.getAscent();
+
+                g2.setColor(fg);
+                g2.drawString(b.getText(), x, y);
+                g2.dispose();
+            }
+        });
+    }
     private javax.swing.JPanel categoriesCard;
     private javax.swing.JLabel insertIcon;
     private javax.swing.JLabel jLabel1;

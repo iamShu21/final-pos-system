@@ -140,6 +140,7 @@ public class MainFrame extends javax.swing.JFrame {
         productsManagementPanel = new ProductsManagementPanel();
         inventoryManagementPanel = new InventoryManagementPanel();
         salesHistoryPanel = new SalesHistoryPanel();
+        salesHistoryPanel.setLoggedInUserInfo(loggedInUsername, loggedInUserRole);
         reportsPanel = new ReportsPanel();
         posControllerPanel = new POSControllerPanel(userId, loggedInUsername, loggedInUserRole);
 

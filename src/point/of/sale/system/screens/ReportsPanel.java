@@ -52,6 +52,7 @@ import javax.swing.JViewport;
 import javax.swing.RowSorter;
 import javax.swing.SortOrder;
 import javax.swing.SwingConstants;
+import javax.swing.Timer;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
@@ -150,7 +151,7 @@ public class ReportsPanel extends javax.swing.JPanel {
         lblCurrentReportTitle.setText("Daily Sales Report");
         resetTable();
 
-        model.setColumnIdentifiers(new String[]{"Date", "Category", "Sales", "Quantity"});
+        model.setColumnIdentifiers(new String[]{"Date", "Category", "Sales", "Quantity", "Status"});
         enhanceTable(tblReports, scrollReportsTable);
 
         String selectedCategory = getSelectedCategory();
@@ -161,12 +162,13 @@ public class ReportsPanel extends javax.swing.JPanel {
         sql.append("SELECT DATE(s.sale_date) AS report_date, ");
         sql.append("c.name AS category_name, ");
         sql.append("SUM(sd.subtotal) AS total_sales, ");
-        sql.append("SUM(sd.quantity) AS total_quantity ");
+        sql.append("SUM(sd.quantity) AS total_quantity, ");
+        sql.append("s.status ");
         sql.append("FROM sales s ");
         sql.append("JOIN sales_details sd ON s.sale_id = sd.sale_id ");
         sql.append("JOIN products p ON sd.product_id = p.product_id ");
         sql.append("JOIN categories c ON p.category_id = c.category_id ");
-        sql.append("WHERE 1=1 ");
+        sql.append("WHERE (s.status IS NULL OR s.status = 'COMPLETED' OR s.status = '') ");
 
         if (!"All Categories".equals(selectedCategory)) {
             sql.append("AND c.name = ? ");
@@ -201,7 +203,8 @@ public class ReportsPanel extends javax.swing.JPanel {
                         rs.getString("report_date"),
                         rs.getString("category_name"),
                         rs.getDouble("total_sales"),
-                        rs.getInt("total_quantity")
+                        rs.getInt("total_quantity"),
+                        rs.getString("status")
                     });
                 }
             }
@@ -231,11 +234,13 @@ public class ReportsPanel extends javax.swing.JPanel {
         styleButton(btnResetFilter, new Color(100, 116, 139));
         styleButton(btnExportPDF, new Color(220, 53, 69));
         styleButton(btnExportExcel, new Color(22, 163, 74));
+        styleButton(btnRefresh, new Color(89, 92, 255));
 
         installRoundedButtonPainter(btnApplyFilter);
         installRoundedButtonPainter(btnResetFilter);
         installRoundedButtonPainter(btnExportPDF);
         installRoundedButtonPainter(btnExportExcel);
+        installRoundedButtonPainter(btnRefresh);
 
         if (lblReportsModule != null) {
             lblReportsModule.setForeground(new Color(49, 73, 209));
@@ -945,7 +950,7 @@ public class ReportsPanel extends javax.swing.JPanel {
         lblCurrentReportTitle.setText("Monthly Sales Report");
         resetTable();
 
-        model.setColumnIdentifiers(new String[]{"Month", "Category", "Sales", "Quantity"});
+        model.setColumnIdentifiers(new String[]{"Month", "Category", "Sales", "Quantity", "Status"});
         enhanceTable(tblReports, scrollReportsTable);
 
         String selectedCategory = getSelectedCategory();
@@ -956,12 +961,13 @@ public class ReportsPanel extends javax.swing.JPanel {
         sql.append("SELECT DATE_FORMAT(s.sale_date, '%Y-%m') AS report_month, ");
         sql.append("c.name AS category_name, ");
         sql.append("SUM(sd.subtotal) AS total_sales, ");
-        sql.append("SUM(sd.quantity) AS total_quantity ");
+        sql.append("SUM(sd.quantity) AS total_quantity, ");
+        sql.append("s.status ");
         sql.append("FROM sales s ");
         sql.append("JOIN sales_details sd ON s.sale_id = sd.sale_id ");
         sql.append("JOIN products p ON sd.product_id = p.product_id ");
         sql.append("JOIN categories c ON p.category_id = c.category_id ");
-        sql.append("WHERE 1=1 ");
+        sql.append("WHERE (s.status IS NULL OR s.status = 'COMPLETED' OR s.status = '') ");
 
         if (!"All Categories".equals(selectedCategory)) {
             sql.append("AND c.name = ? ");
@@ -996,7 +1002,8 @@ public class ReportsPanel extends javax.swing.JPanel {
                         rs.getString("report_month"),
                         rs.getString("category_name"),
                         rs.getDouble("total_sales"),
-                        rs.getInt("total_quantity")
+                        rs.getInt("total_quantity"),
+                        rs.getString("status")
                     });
                 }
             }
@@ -1119,7 +1126,7 @@ public class ReportsPanel extends javax.swing.JPanel {
         lblCurrentReportTitle.setText("Profit Report");
         resetTable();
 
-        model.setColumnIdentifiers(new String[]{"Date", "Category", "Sales", "Profit"});
+        model.setColumnIdentifiers(new String[]{"Date", "Category", "Sales", "Profit", "Status"});
         enhanceTable(tblReports, scrollReportsTable);
 
         String selectedCategory = getSelectedCategory();
@@ -1130,12 +1137,13 @@ public class ReportsPanel extends javax.swing.JPanel {
         sql.append("SELECT DATE(s.sale_date) AS report_date, ");
         sql.append("c.name AS category_name, ");
         sql.append("SUM(sd.subtotal) AS total_sales, ");
-        sql.append("SUM((sd.price - p.cost_price) * sd.quantity - sd.discount) AS total_profit ");
+        sql.append("SUM((sd.price - p.cost_price) * sd.quantity - sd.discount) AS total_profit, ");
+        sql.append("s.status ");
         sql.append("FROM sales s ");
         sql.append("JOIN sales_details sd ON s.sale_id = sd.sale_id ");
         sql.append("JOIN products p ON sd.product_id = p.product_id ");
         sql.append("JOIN categories c ON p.category_id = c.category_id ");
-        sql.append("WHERE 1=1 ");
+        sql.append("WHERE (s.status IS NULL OR s.status = 'COMPLETED' OR s.status = '') ");
 
         if (!"All Categories".equals(selectedCategory)) {
             sql.append("AND c.name = ? ");
@@ -1170,7 +1178,8 @@ public class ReportsPanel extends javax.swing.JPanel {
                         rs.getString("report_date"),
                         rs.getString("category_name"),
                         rs.getDouble("total_sales"),
-                        rs.getDouble("total_profit")
+                        rs.getDouble("total_profit"),
+                        rs.getString("status")
                     });
                 }
             }
@@ -1351,6 +1360,7 @@ public class ReportsPanel extends javax.swing.JPanel {
                 g2.dispose();
             }
         };
+        btnRefresh = new javax.swing.JButton();
         jPanel1 = new RoundedPanel();
         scrollReportsTable = new javax.swing.JScrollPane();
         tblReports = new javax.swing.JTable();
@@ -1409,6 +1419,9 @@ public class ReportsPanel extends javax.swing.JPanel {
         lblCurrentReportTitle.setText("Daily Report");
         pnlExportButtons.add(lblCurrentReportTitle, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 24, -1, 20));
 
+        btnRefresh.setText("Refresh");
+        pnlExportButtons.add(btnRefresh, new org.netbeans.lib.awtextra.AbsoluteConstraints(700, 20, 100, 30));
+
         add(pnlExportButtons, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 410, 1100, 70));
 
         jPanel1.setBackground(new java.awt.Color(122, 170, 206));
@@ -1438,14 +1451,17 @@ public class ReportsPanel extends javax.swing.JPanel {
         pnlFilters.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         lblCategory.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        lblCategory.setForeground(new java.awt.Color(40, 55, 80));
         lblCategory.setText("Category");
         pnlFilters.add(lblCategory, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 50, -1, -1));
 
         lblStartDate.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        lblStartDate.setForeground(new java.awt.Color(40, 55, 80));
         lblStartDate.setText("Start Date");
         pnlFilters.add(lblStartDate, new org.netbeans.lib.awtextra.AbsoluteConstraints(280, 50, -1, -1));
 
         lblEndDate.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        lblEndDate.setForeground(new java.awt.Color(40, 55, 80));
         lblEndDate.setText("End Date");
         pnlFilters.add(lblEndDate, new org.netbeans.lib.awtextra.AbsoluteConstraints(540, 50, -1, -1));
 
@@ -1578,6 +1594,31 @@ public class ReportsPanel extends javax.swing.JPanel {
         add(jSeparator3, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 30, 890, 10));
     }// </editor-fold>//GEN-END:initComponents
 
+    private void btnRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRefreshActionPerformed
+        if (btnRefresh != null) {
+            animateRefreshButton();
+        }
+        applyCurrentReport();
+    }//GEN-LAST:event_btnRefreshActionPerformed
+
+    private void animateRefreshButton() {
+        final int[] step = {0};
+        Timer timer = new Timer(20, null);
+        timer.addActionListener(e -> {
+            step[0]++;
+            float t = step[0] / 18f;
+            int pad = (int) (Math.sin(t * Math.PI) * 4);
+            btnRefresh.setBorder(new javax.swing.border.EmptyBorder(10 - pad, 18, 10 + pad, 18));
+            btnRefresh.repaint();
+            if (step[0] >= 18) {
+                timer.stop();
+                btnRefresh.setBorder(new javax.swing.border.EmptyBorder(10, 18, 10, 18));
+                btnRefresh.repaint();
+            }
+        });
+        timer.start();
+    }
+
     private void btnApplyFilterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnApplyFilterActionPerformed
         applyCurrentReport();
     }//GEN-LAST:event_btnApplyFilterActionPerformed
@@ -1630,6 +1671,7 @@ public class ReportsPanel extends javax.swing.JPanel {
     private javax.swing.JButton btnApplyFilter;
     private javax.swing.JButton btnExportExcel;
     private javax.swing.JButton btnExportPDF;
+    private javax.swing.JButton btnRefresh;
     private javax.swing.JButton btnResetFilter;
     private javax.swing.JComboBox<String> cmbCategory;
     private com.toedter.calendar.JDateChooser dcEndDate;
