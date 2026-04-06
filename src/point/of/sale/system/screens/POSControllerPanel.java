@@ -44,6 +44,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JPasswordField;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
@@ -98,6 +99,7 @@ import javax.swing.text.AbstractDocument;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class POSControllerPanel extends javax.swing.JPanel {
 
@@ -1220,7 +1222,7 @@ public class POSControllerPanel extends javax.swing.JPanel {
         double vat = netSales - vatableSales;
         double total = netSales;
 
-        subtotalValue.setText(formatMoneyWithPeso(gross));
+        subtotalValue.setText(formatMoneyWithPeso(vatableSales));
         discoutValue.setText(formatMoneyWithPeso(discount));
         vatValue.setText(formatMoneyWithPeso(vat));
         totalValue.setText(formatMoneyWithPeso(total));
@@ -1697,6 +1699,10 @@ public class POSControllerPanel extends javax.swing.JPanel {
                 return;
             }
 
+            if (discount > 0 && isCashier() && !requestDiscountApproval(dialog, product.productName, discount)) {
+                return;
+            }
+
             addOrMergeCartItem(
                     product.productId,
                     product.productName,
@@ -1795,6 +1801,156 @@ public class POSControllerPanel extends javax.swing.JPanel {
         updateComputation();
     }
 
+    private boolean isCashier() {
+        return "Cashier".equalsIgnoreCase(loggedInRole);
+    }
+
+    private boolean requestDiscountApproval(JDialog parentDialog, String productName, double discountAmount) {
+        final boolean[] approved = {false};
+        JDialog approvalDialog = new JDialog(parentDialog, "Discount Approval", true);
+        approvalDialog.setLayout(new BorderLayout());
+        approvalDialog.getContentPane().setBackground(Color.WHITE);
+
+        JPanel header = createDialogHeader("Discount Approval Required",
+                "Manager or Super Admin credentials are required to approve this discount.");
+
+        JPanel contentWrapper = new JPanel(new BorderLayout());
+        contentWrapper.setBackground(Color.WHITE);
+        contentWrapper.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+
+        JPanel content = new JPanel(new java.awt.GridBagLayout());
+        content.setBackground(Color.WHITE);
+
+        java.awt.GridBagConstraints gbc = new java.awt.GridBagConstraints();
+        gbc.anchor = java.awt.GridBagConstraints.WEST;
+        gbc.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gbc.weighty = 0;
+
+        JTextField txtApproverUsername = new JTextField();
+        txtApproverUsername.setPreferredSize(new Dimension(200, 34));
+        txtApproverUsername.setMinimumSize(new Dimension(200, 34));
+        styleTextField(txtApproverUsername);
+
+        JPasswordField txtApproverPassword = new JPasswordField();
+        txtApproverPassword.setPreferredSize(new Dimension(200, 34));
+        txtApproverPassword.setMinimumSize(new Dimension(200, 34));
+        txtApproverPassword.setEchoChar('•');
+        styleTextField(txtApproverPassword);
+
+        JLabel lblDiscount = createDialogValueLabel(formatMoneyWithPeso(discountAmount));
+        lblDiscount.setForeground(new Color(190, 40, 60));
+
+        JLabel lblRequestedBy = createDialogValueLabel(loggedInName + " (" + loggedInRole + ")");
+
+        addDialogRow(content, gbc, 0, "Approver Username", txtApproverUsername);
+        addDialogRow(content, gbc, 1, "Approver Password", txtApproverPassword);
+        addDialogRow(content, gbc, 2, "Discount Amount", lblDiscount);
+        addDialogRow(content, gbc, 3, "Requested By", lblRequestedBy);
+
+        contentWrapper.add(content, BorderLayout.CENTER);
+
+        JButton btnApprove = new JButton("Approve");
+        JButton btnCancel = new JButton("Cancel");
+
+        styleDialogButton(btnApprove, new Color(46, 125, 50), Color.WHITE);
+        styleDialogButton(btnCancel, new Color(220, 220, 220), Color.BLACK);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 12));
+        buttonPanel.setBackground(Color.WHITE);
+        buttonPanel.setBorder(new EmptyBorder(0, 10, 12, 10));
+        buttonPanel.add(btnCancel);
+        buttonPanel.add(btnApprove);
+
+        approvalDialog.add(header, BorderLayout.NORTH);
+        approvalDialog.add(contentWrapper, BorderLayout.CENTER);
+        approvalDialog.add(buttonPanel, BorderLayout.SOUTH);
+
+        btnApprove.addActionListener(e -> {
+            String approverUsername = txtApproverUsername.getText().trim();
+            String approverPassword = new String(txtApproverPassword.getPassword()).trim();
+
+            if (approverUsername.isEmpty() || approverPassword.isEmpty()) {
+                JOptionPane.showMessageDialog(approvalDialog, "Please enter approver username and password.");
+                return;
+            }
+
+            if (validateApproverCredentials(approverUsername, approverPassword, productName, discountAmount)) {
+                approved[0] = true;
+                approvalDialog.dispose();
+            }
+        });
+
+        btnCancel.addActionListener(e -> approvalDialog.dispose());
+
+        approvalDialog.getRootPane().setDefaultButton(btnApprove);
+        approvalDialog.pack();
+        approvalDialog.setMinimumSize(new Dimension(500, 370));
+        approvalDialog.setLocationRelativeTo(parentDialog);
+        approvalDialog.setResizable(false);
+        approvalDialog.setVisible(true);
+
+        return approved[0];
+    }
+
+    private boolean validateApproverCredentials(String username, String password, String productName, double discountAmount) {
+        String sql = "SELECT username, role, password FROM users WHERE username = ? LIMIT 1";
+
+        try (Connection con = DBConnection.dbConnection();
+             PreparedStatement pst = con.prepareStatement(sql)) {
+
+            pst.setString(1, username);
+            try (ResultSet rs = pst.executeQuery()) {
+                if (!rs.next()) {
+                    JOptionPane.showMessageDialog(this, "Approver credentials are invalid.");
+                    return false;
+                }
+
+                String approverRole = rs.getString("role");
+                String storedPassword = rs.getString("password");
+                boolean passwordMatches;
+
+                if (storedPassword != null && storedPassword.startsWith("$2a$")) {
+                    passwordMatches = BCrypt.checkpw(password, storedPassword);
+                } else {
+                    passwordMatches = password.equals(storedPassword);
+                }
+
+                if (!passwordMatches) {
+                    JOptionPane.showMessageDialog(this, "Approver credentials are invalid.");
+                    return false;
+                }
+
+                if (!"Manager".equalsIgnoreCase(approverRole) && !"Super Admin".equalsIgnoreCase(approverRole)) {
+                    JOptionPane.showMessageDialog(this, "Approver must be a Manager or Super Admin.");
+                    insertUserLog(username, approverRole,
+                            "Denied discount approval for cashier " + loggedInName + " on " + productName + " with discount " + formatMoneyWithPeso(discountAmount) + " (insufficient role)");
+                    return false;
+                }
+
+                insertUserLog(username, approverRole,
+                        "Approved discount of " + formatMoneyWithPeso(discountAmount) + " on " + productName + " for cashier " + loggedInName);
+                return true;
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Unable to verify approver credentials: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private void insertUserLog(String username, String userRole, String action) {
+        String sql = "INSERT INTO user_logs (username, user_role, action) VALUES (?, ?, ?)";
+
+        try (Connection con = DBConnection.dbConnection();
+             PreparedStatement pst = con.prepareStatement(sql)) {
+            pst.setString(1, username);
+            pst.setString(2, userRole);
+            pst.setString(3, action);
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Failed to insert user log: " + e.getMessage());
+        }
+    }
+
     private int findRowByProductId(int productId) {
         for (int i = 0; i < cartModel.getRowCount(); i++) {
             int rowProductId = ((Integer) cartModel.getValueAt(i, 0)).intValue();
@@ -1866,36 +2022,46 @@ public class POSControllerPanel extends javax.swing.JPanel {
         contentWrapper.setBackground(Color.WHITE);
         contentWrapper.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        JPanel content = new JPanel(new GridLayout(0, 2, 12, 12));
+        JPanel content = new JPanel(new java.awt.GridBagLayout());
         content.setBackground(Color.WHITE);
+
+        java.awt.GridBagConstraints gbc = new java.awt.GridBagConstraints();
+        gbc.anchor = java.awt.GridBagConstraints.WEST;
+        gbc.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gbc.weighty = 0;
 
         JLabel lblName = createDialogValueLabel(productName);
         JLabel lblPrice = createDialogValueLabel(formatMoneyWithPeso(price));
         JLabel lblStock = createDialogValueLabel(String.valueOf(availableStock));
         final JSpinner qtySpinner = new JSpinner(new SpinnerNumberModel(currentQty, 1, availableStock, 1));
         qtySpinner.setFont(new Font("Tahoma", Font.PLAIN, 13));
+        qtySpinner.setPreferredSize(new Dimension(200, 34));
+        qtySpinner.setMinimumSize(new Dimension(200, 34));
+
+        JComponent spinnerEditor = qtySpinner.getEditor();
+        if (spinnerEditor instanceof JSpinner.DefaultEditor) {
+            JSpinner.DefaultEditor editor = (JSpinner.DefaultEditor) spinnerEditor;
+            JTextField spinnerField = editor.getTextField();
+            spinnerField.setHorizontalAlignment(JTextField.CENTER);
+            spinnerField.setEditable(false);
+            spinnerField.setBackground(Color.WHITE);
+            spinnerField.setFont(new Font("Tahoma", Font.PLAIN, 13));
+            spinnerField.setPreferredSize(new Dimension(80, 24));
+            spinnerField.setMinimumSize(new Dimension(80, 24));
+        }
 
         final JLabel lblSubtotal = new JLabel("₱0.00");
         lblSubtotal.setFont(new Font("Tahoma", Font.BOLD, 15));
         lblSubtotal.setForeground(new Color(0, 102, 204));
+        lblSubtotal.setPreferredSize(new Dimension(320, 36));
+        lblSubtotal.setMinimumSize(new Dimension(320, 36));
 
-        content.add(createDialogLabel("Product Name"));
-        content.add(lblName);
-
-        content.add(createDialogLabel("Price"));
-        content.add(lblPrice);
-
-        content.add(createDialogLabel("Available Stock"));
-        content.add(lblStock);
-
-        content.add(createDialogLabel("Quantity"));
-        content.add(qtySpinner);
-
-        content.add(createDialogLabel("Discount"));
-        content.add(createDialogValueLabel(formatMoneyWithPeso(discount)));
-
-        content.add(createDialogLabel("New Subtotal"));
-        content.add(lblSubtotal);
+        addDialogRow(content, gbc, 0, "Product Name", lblName);
+        addDialogRow(content, gbc, 1, "Price", lblPrice);
+        addDialogRow(content, gbc, 2, "Available Stock", lblStock);
+        addDialogRow(content, gbc, 3, "Quantity", qtySpinner);
+        addDialogRow(content, gbc, 4, "Discount", createDialogValueLabel(formatMoneyWithPeso(discount)));
+        addDialogRow(content, gbc, 5, "New Subtotal", lblSubtotal);
 
         contentWrapper.add(content, BorderLayout.CENTER);
 
@@ -2660,7 +2826,36 @@ public class POSControllerPanel extends javax.swing.JPanel {
         pnlCart = new RoundedPanel();
         automatedNoOfItems = new javax.swing.JLabel();
         lblNoOfItems = new javax.swing.JLabel();
-        jLabel11 = new javax.swing.JLabel("Add New User") {     @Override     protected void paintComponent(java.awt.Graphics g) {         java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();          g2.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,                             java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);          float[] fractions = {0.5f, 1f};         java.awt.Color[] colors = {             java.awt.Color.WHITE,             java.awt.Color.BLUE         };          java.awt.LinearGradientPaint lgp = new java.awt.LinearGradientPaint(                 0, 0, getWidth(), 0,                 fractions, colors         );          g2.setPaint(lgp);          java.awt.FontMetrics fm = g2.getFontMetrics();         int x = (getWidth() - fm.stringWidth(getText())) / 2;         int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();          g2.drawString(getText(), x, y);          g2.dispose();     } };
+        jLabel11 = new javax.swing.JLabel("Add New User") {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,
+                    java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+                float[] fractions = {0f, 1f};
+                java.awt.Color[] colors = {
+                    new java.awt.Color(135, 206, 250), // light blue
+                    java.awt.Color.WHITE
+                };
+
+                java.awt.LinearGradientPaint lgp = new java.awt.LinearGradientPaint(
+                    0, 0, getWidth(), 0,
+                    fractions, colors
+                );
+
+                g2.setPaint(lgp);
+
+                java.awt.FontMetrics fm = g2.getFontMetrics();
+                int x = (getWidth() - fm.stringWidth(getText())) / 2;
+                int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();
+
+                g2.drawString(getText(), x, y);
+
+                g2.dispose();
+            }
+        };
         cartGIF = new javax.swing.JLabel();
         jLabel12 = new point.of.sale.system.classes.GradientFont();
         pnlClickToProductPreviewProduct = new RoundedPanel();
@@ -2715,7 +2910,7 @@ public class POSControllerPanel extends javax.swing.JPanel {
         pnlProductEntry.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jLabel3.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
-        jLabel3.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel3.setForeground(new java.awt.Color(40, 55, 80));
         jLabel3.setText("Search for product name or barcode");
         pnlProductEntry.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(13, 13, -1, -1));
 
@@ -2732,22 +2927,22 @@ public class POSControllerPanel extends javax.swing.JPanel {
         pnlComputation.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jLabel4.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
-        jLabel4.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel4.setForeground(new java.awt.Color(40, 55, 80));
         jLabel4.setText("Computation");
         pnlComputation.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 20, 170, -1));
 
         jLabel5.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
-        jLabel5.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel5.setForeground(new java.awt.Color(40, 55, 80));
         jLabel5.setText("Subtotal:");
         pnlComputation.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 70, 80, -1));
 
         jLabel6.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
-        jLabel6.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel6.setForeground(new java.awt.Color(40, 55, 80));
         jLabel6.setText("Discount:");
         pnlComputation.add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 110, -1, -1));
 
         vat12Percent.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
-        vat12Percent.setForeground(new java.awt.Color(255, 255, 255));
+        vat12Percent.setForeground(new java.awt.Color(40, 55, 80));
         vat12Percent.setText("VAT (12%):");
         pnlComputation.add(vat12Percent, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 150, -1, -1));
 
@@ -2772,7 +2967,7 @@ public class POSControllerPanel extends javax.swing.JPanel {
         pnlComputation.add(jSeparator1, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 200, 300, 10));
 
         jLabel7.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        jLabel7.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel7.setForeground(new java.awt.Color(40, 55, 80));
         jLabel7.setText("Total:");
         pnlComputation.add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 220, -1, -1));
 
@@ -2788,17 +2983,17 @@ public class POSControllerPanel extends javax.swing.JPanel {
         pnlPaymentMethod.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jLabel8.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
-        jLabel8.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel8.setForeground(new java.awt.Color(40, 55, 80));
         jLabel8.setText("Payment Methods");
         pnlPaymentMethod.add(jLabel8, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 20, 230, -1));
 
         jLabel9.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
-        jLabel9.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel9.setForeground(new java.awt.Color(40, 55, 80));
         jLabel9.setText("Cash Tendered:");
         pnlPaymentMethod.add(jLabel9, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 190, -1, -1));
 
         jLabel10.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
-        jLabel10.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel10.setForeground(new java.awt.Color(40, 55, 80));
         jLabel10.setText("Change:");
         pnlPaymentMethod.add(jLabel10, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 270, 70, -1));
 
@@ -2833,7 +3028,7 @@ public class POSControllerPanel extends javax.swing.JPanel {
         add(btnPDF, new org.netbeans.lib.awtextra.AbsoluteConstraints(950, 760, 150, 40));
 
         pnlCart.setBackground(new java.awt.Color(18, 48, 174));
-        pnlCart.setBorder(javax.swing.BorderFactory.createLineBorder(null));
+        pnlCart.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         pnlCart.setForeground(new java.awt.Color(255, 255, 255));
         pnlCart.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
@@ -2871,7 +3066,7 @@ public class POSControllerPanel extends javax.swing.JPanel {
         pnlClickToProductPreviewProduct.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jLabel13.setFont(new java.awt.Font("Tahoma", 1, 17)); // NOI18N
-        jLabel13.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel13.setForeground(new java.awt.Color(40, 55, 80));
         jLabel13.setText("Click to preview product");
         pnlClickToProductPreviewProduct.add(jLabel13, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 20, -1, 30));
 
@@ -2892,7 +3087,7 @@ public class POSControllerPanel extends javax.swing.JPanel {
         pnlTableWrap.setBackground(new java.awt.Color(122, 170, 206));
         pnlTableWrap.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        tblCart.setBorder(javax.swing.BorderFactory.createLineBorder(null));
+        tblCart.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         tblCart.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 

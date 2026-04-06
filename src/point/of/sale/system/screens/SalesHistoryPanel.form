@@ -262,7 +262,7 @@
     <Container class="javax.swing.JPanel" name="tblHeader">
       <Properties>
         <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-          <Color blue="ff" green="ff" red="ff" type="rgb"/>
+          <Color blue="ae" green="30" red="12" type="rgb"/>
         </Property>
       </Properties>
       <AuxValues>
@@ -285,6 +285,9 @@
             </Property>
             <Property name="text" type="java.lang.String" value="Sales Transactions"/>
           </Properties>
+          <AuxValues>
+            <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new javax.swing.JLabel(&quot;Add New User&quot;) {&#xd;&#xa;    @Override&#xd;&#xa;    protected void paintComponent(java.awt.Graphics g) {&#xd;&#xa;        java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();&#xd;&#xa;&#xd;&#xa;        g2.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,&#xd;&#xa;                java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);&#xd;&#xa;&#xd;&#xa;        float[] fractions = {0f, 1f};&#xd;&#xa;        java.awt.Color[] colors = {&#xd;&#xa;            new java.awt.Color(135, 206, 250), // light blue&#xd;&#xa;            java.awt.Color.WHITE&#xd;&#xa;        };&#xd;&#xa;&#xd;&#xa;        java.awt.LinearGradientPaint lgp = new java.awt.LinearGradientPaint(&#xd;&#xa;                0, 0, getWidth(), 0,&#xd;&#xa;                fractions, colors&#xd;&#xa;        );&#xd;&#xa;&#xd;&#xa;        g2.setPaint(lgp);&#xd;&#xa;&#xd;&#xa;        java.awt.FontMetrics fm = g2.getFontMetrics();&#xd;&#xa;        int x = (getWidth() - fm.stringWidth(getText())) / 2;&#xd;&#xa;        int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();&#xd;&#xa;&#xd;&#xa;        g2.drawString(getText(), x, y);&#xd;&#xa;&#xd;&#xa;        g2.dispose();&#xd;&#xa;    }&#xd;&#xa;};"/>
+          </AuxValues>
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
               <AbsoluteConstraints x="20" y="22" width="-1" height="-1"/>

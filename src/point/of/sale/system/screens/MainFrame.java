@@ -46,6 +46,85 @@ public class MainFrame extends javax.swing.JFrame {
         startDateTimeTimer();
         setupSidebarHoverEffects();
         setActiveNav(navDashboard);
+        applyRBACVisibility();
+    }
+
+    // RBAC Helper Methods
+    private boolean isSuperAdmin() {
+        return "Super Admin".equalsIgnoreCase(loggedInUserRole);
+    }
+
+    private boolean isManager() {
+        return "Manager".equalsIgnoreCase(loggedInUserRole);
+    }
+
+    private boolean isCashier() {
+        return "Cashier".equalsIgnoreCase(loggedInUserRole);
+    }
+
+    private boolean isInventoryClerk() {
+        return "Inventory Clerk".equalsIgnoreCase(loggedInUserRole);
+    }
+
+    private boolean canManageUsers() {
+        return isSuperAdmin() || isManager();
+    }
+
+    private boolean canManageCategories() {
+        return isSuperAdmin() || isManager() || isInventoryClerk();
+    }
+
+    private boolean canManageSuppliers() {
+        return isSuperAdmin() || isManager() || isInventoryClerk();
+    }
+
+    private boolean canManageProducts() {
+        return isSuperAdmin() || isManager() || isInventoryClerk();
+    }
+
+    private boolean canManageInventory() {
+        return isSuperAdmin() || isManager() || isInventoryClerk();
+    }
+
+    private boolean canUsePOS() {
+        return isSuperAdmin() || isManager() || isCashier();
+    }
+
+    private boolean canViewSalesHistory() {
+        return isSuperAdmin() || isManager();
+    }
+
+    private boolean canViewReports() {
+        return isSuperAdmin() || isManager();
+    }
+
+    private void applyRBACVisibility() {
+        // Dashboard: Super Admin and Manager
+        navDashboard.setVisible(isSuperAdmin() || isManager());
+
+        // Users: Super Admin and Manager
+        navUsers.setVisible(canManageUsers());
+
+        // Categories: Super Admin, Manager, Inventory Clerk
+        navCategories.setVisible(canManageCategories());
+
+        // Suppliers: Super Admin, Manager, Inventory Clerk
+        navSuppliers.setVisible(canManageSuppliers());
+
+        // Products: Super Admin, Manager, Inventory Clerk
+        navProducts.setVisible(canManageProducts());
+
+        // Inventory: Super Admin, Manager, Inventory Clerk
+        navInventory.setVisible(canManageInventory());
+
+        // POS: Super Admin, Manager, Cashier
+        navPOS.setVisible(canUsePOS());
+
+        // Sales History: Super Admin, Manager
+        navSalesHistory.setVisible(canViewSalesHistory());
+
+        // Reports: Super Admin, Manager
+        navReports.setVisible(canViewReports());
     }
 
     private void setLoggedInUserInfo() {
@@ -84,6 +163,66 @@ public class MainFrame extends javax.swing.JFrame {
     private void showPanel(String name) {
         java.awt.CardLayout cl = (java.awt.CardLayout) contentPanel.getLayout();
         cl.show(contentPanel, name);
+    }
+
+    public void openProductsModule() {
+        if (!canManageProducts()) {
+            JOptionPane.showMessageDialog(this, "Access denied.");
+            return;
+        }
+        showPanel("products");
+        setActiveNav(navProducts);
+    }
+
+    public void openUsersModule() {
+        if (!canManageUsers()) {
+            JOptionPane.showMessageDialog(this, "Access denied.");
+            return;
+        }
+        showPanel("users");
+        setActiveNav(navUsers);
+    }
+
+    public void openCategoriesModule() {
+        if (!canManageCategories()) {
+            JOptionPane.showMessageDialog(this, "Access denied.");
+            return;
+        }
+        showPanel("categories");
+        setActiveNav(navCategories);
+    }
+
+    public void openSuppliersModule() {
+        if (!canManageSuppliers()) {
+            JOptionPane.showMessageDialog(this, "Access denied.");
+            return;
+        }
+        showPanel("suppliers");
+        setActiveNav(navSuppliers);
+    }
+
+    public void openReportsDailySales() {
+        if (!canViewReports()) {
+            JOptionPane.showMessageDialog(this, "Access denied.");
+            return;
+        }
+        showPanel("reports");
+        setActiveNav(navReports);
+        if (reportsPanel != null) {
+            reportsPanel.showDailySalesReport();
+        }
+    }
+
+    public void openReportsLowStock() {
+        if (!canViewReports()) {
+            JOptionPane.showMessageDialog(this, "Access denied.");
+            return;
+        }
+        showPanel("reports");
+        setActiveNav(navReports);
+        if (reportsPanel != null) {
+            reportsPanel.showLowStockReport();
+        }
     }
 
     private void startDateTimeTimer() {
@@ -222,18 +361,18 @@ public class MainFrame extends javax.swing.JFrame {
         brandPanel.setBackground(new java.awt.Color(17, 31, 162));
         brandPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        lblLogo.setIcon(new javax.swing.ImageIcon(getClass().getResource("/point/of/sale/system/icons/point-of-service.png"))); // NOI18N
+        lblLogo.setIcon(new javax.swing.ImageIcon(getClass().getResource("/point/of/sale/system/icons/brandlogo.png"))); // NOI18N
         brandPanel.add(lblLogo, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 10, 72, 70));
 
-        lblSystemTitle.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
+        lblSystemTitle.setFont(new java.awt.Font("Tahoma", 1, 28)); // NOI18N
         lblSystemTitle.setForeground(new java.awt.Color(255, 255, 255));
         lblSystemTitle.setText("POS SYSTEM");
-        brandPanel.add(lblSystemTitle, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 20, 170, 30));
+        brandPanel.add(lblSystemTitle, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 20, 180, 30));
 
         lblSystemSubtitle.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         lblSystemSubtitle.setForeground(new java.awt.Color(255, 255, 255));
-        lblSystemSubtitle.setText("POS ni Shuhari");
-        brandPanel.add(lblSystemSubtitle, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 60, 130, -1));
+        lblSystemSubtitle.setText("Point of Sh`t");
+        brandPanel.add(lblSystemSubtitle, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 47, 130, 30));
         brandPanel.add(jSeparator1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 90, -1, 100));
 
         sidebarPanel.add(brandPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 320, 100));
@@ -402,9 +541,9 @@ public class MainFrame extends javax.swing.JFrame {
         userInfoPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         lbluserIcon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/point/of/sale/system/icons/usertop.png"))); // NOI18N
-        userInfoPanel.add(lbluserIcon, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 40, 40));
+        userInfoPanel.add(lbluserIcon, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 10, -1, 40));
 
-        lblAutomatedUsername.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        lblAutomatedUsername.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         lblAutomatedUsername.setForeground(new java.awt.Color(255, 255, 255));
         lblAutomatedUsername.setText("Username");
         userInfoPanel.add(lblAutomatedUsername, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 10, 90, -1));
@@ -473,38 +612,66 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_navDashboardMouseClicked
 
     private void navUsersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_navUsersMouseClicked
+        if (!canManageUsers()) {
+            JOptionPane.showMessageDialog(this, "Access denied.");
+            return;
+        }
         showPanel("users");
         setActiveNav(navUsers);
     }//GEN-LAST:event_navUsersMouseClicked
 
     private void navSuppliersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_navSuppliersMouseClicked
+        if (!canManageSuppliers()) {
+            JOptionPane.showMessageDialog(this, "Access denied.");
+            return;
+        }
         showPanel("suppliers");
         setActiveNav(navSuppliers);
 
     }//GEN-LAST:event_navSuppliersMouseClicked
 
     private void navProductsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_navProductsMouseClicked
+        if (!canManageProducts()) {
+            JOptionPane.showMessageDialog(this, "Access denied.");
+            return;
+        }
         showPanel("products");
         setActiveNav(navProducts);
 
     }//GEN-LAST:event_navProductsMouseClicked
 
     private void navPOSMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_navPOSMouseClicked
+        if (!canUsePOS()) {
+            JOptionPane.showMessageDialog(this, "Access denied.");
+            return;
+        }
         showPanel("pos");
         setActiveNav(navPOS);
     }//GEN-LAST:event_navPOSMouseClicked
 
     private void navSalesHistoryMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_navSalesHistoryMouseClicked
+        if (!canViewSalesHistory()) {
+            JOptionPane.showMessageDialog(this, "Access denied.");
+            return;
+        }
         showPanel("salesHistory");
         setActiveNav(navSalesHistory);
     }//GEN-LAST:event_navSalesHistoryMouseClicked
 
     private void navReportsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_navReportsMouseClicked
+        if (!canViewReports()) {
+            JOptionPane.showMessageDialog(this, "Access denied.");
+            return;
+        }
         showPanel("reports");
         setActiveNav(navReports);
     }//GEN-LAST:event_navReportsMouseClicked
 
     private void navCategoriesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_navCategoriesMouseClicked
+        if (!canManageCategories()) {
+            JOptionPane.showMessageDialog(this, "Access denied.");
+            return;
+        }
         showPanel("categories");
         setActiveNav(navCategories);
     }//GEN-LAST:event_navCategoriesMouseClicked
@@ -528,6 +695,10 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_btnLogoutActionPerformed
 
     private void navInventoryMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_navInventoryMouseClicked
+        if (!canManageInventory()) {
+            JOptionPane.showMessageDialog(this, "Access denied.");
+            return;
+        }
         showPanel("inventories");
         setActiveNav(navInventory);
     }//GEN-LAST:event_navInventoryMouseClicked

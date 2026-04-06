@@ -786,9 +786,67 @@ public class CategoryManagementPanel extends javax.swing.JPanel {
         jLabel6 = new javax.swing.JLabel();
         jLabel2 = new point.of.sale.system.classes.GradientFont();
         jPanel7 = new RoundedPanel();
-        lblAddNewUser = new javax.swing.JLabel("Add New User") {     @Override     protected void paintComponent(java.awt.Graphics g) {         java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();          g2.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,                             java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);          float[] fractions = {0.5f, 1f};         java.awt.Color[] colors = {             java.awt.Color.WHITE,             java.awt.Color.BLUE         };          java.awt.LinearGradientPaint lgp = new java.awt.LinearGradientPaint(                 0, 0, getWidth(), 0,                 fractions, colors         );          g2.setPaint(lgp);          java.awt.FontMetrics fm = g2.getFontMetrics();         int x = (getWidth() - fm.stringWidth(getText())) / 2;         int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();          g2.drawString(getText(), x, y);          g2.dispose();     } };
+        lblAddNewUser = new javax.swing.JLabel("Add New User") {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,
+                    java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+                float[] fractions = {0f, 1f};
+                java.awt.Color[] colors = {
+                    new java.awt.Color(135, 206, 250), // light blue
+                    java.awt.Color.WHITE
+                };
+
+                java.awt.LinearGradientPaint lgp = new java.awt.LinearGradientPaint(
+                    0, 0, getWidth(), 0,
+                    fractions, colors
+                );
+
+                g2.setPaint(lgp);
+
+                java.awt.FontMetrics fm = g2.getFontMetrics();
+                int x = (getWidth() - fm.stringWidth(getText())) / 2;
+                int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();
+
+                g2.drawString(getText(), x, y);
+
+                g2.dispose();
+            }
+        };
         jPanel4 = new RoundedPanel();
-        jLabel1 = new javax.swing.JLabel("Add New User") {     @Override     protected void paintComponent(java.awt.Graphics g) {         java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();          g2.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,                             java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);          float[] fractions = {0.5f, 1f};         java.awt.Color[] colors = {             java.awt.Color.WHITE,             java.awt.Color.BLUE         };          java.awt.LinearGradientPaint lgp = new java.awt.LinearGradientPaint(                 0, 0, getWidth(), 0,                 fractions, colors         );          g2.setPaint(lgp);          java.awt.FontMetrics fm = g2.getFontMetrics();         int x = (getWidth() - fm.stringWidth(getText())) / 2;         int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();          g2.drawString(getText(), x, y);          g2.dispose();     } };
+        jLabel1 = new javax.swing.JLabel("Add New User") {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,
+                    java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+                float[] fractions = {0f, 1f};
+                java.awt.Color[] colors = {
+                    new java.awt.Color(135, 206, 250), // light blue
+                    java.awt.Color.WHITE
+                };
+
+                java.awt.LinearGradientPaint lgp = new java.awt.LinearGradientPaint(
+                    0, 0, getWidth(), 0,
+                    fractions, colors
+                );
+
+                g2.setPaint(lgp);
+
+                java.awt.FontMetrics fm = g2.getFontMetrics();
+                int x = (getWidth() - fm.stringWidth(getText())) / 2;
+                int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();
+
+                g2.drawString(getText(), x, y);
+
+                g2.dispose();
+            }
+        };
         btnEdit = new javax.swing.JButton();
         btnDelete = new javax.swing.JButton();
         txtSearch = new javax.swing.JTextField();
@@ -838,6 +896,7 @@ public class CategoryManagementPanel extends javax.swing.JPanel {
         pnlAddNewCategory.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jLabel3.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        jLabel3.setForeground(new java.awt.Color(40, 55, 80));
         jLabel3.setText("Category Name: ");
         pnlAddNewCategory.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, -1, -1));
 
@@ -849,6 +908,7 @@ public class CategoryManagementPanel extends javax.swing.JPanel {
         pnlAddNewCategory.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 100, 560, 120));
 
         jLabel4.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        jLabel4.setForeground(new java.awt.Color(40, 55, 80));
         jLabel4.setText("Description:");
         pnlAddNewCategory.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 100, -1, -1));
 

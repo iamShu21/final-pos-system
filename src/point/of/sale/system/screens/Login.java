@@ -18,6 +18,7 @@ import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import point.of.sale.system.classes.DBConnection;
 import point.of.sale.system.classes.RoundedPanel;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class Login extends javax.swing.JFrame {
 
@@ -149,21 +150,35 @@ public class Login extends javax.swing.JFrame {
             return;
         }
 
-        String sql = "SELECT user_id, username, role FROM users WHERE username = ? AND password = ? LIMIT 1";
+        String sql = "SELECT user_id, username, role, password FROM users WHERE username = ? LIMIT 1";
 
         try (Connection conn = DBConnection.dbConnection(); PreparedStatement pst = conn.prepareStatement(sql)) {
 
             pst.setString(1, username);
-            pst.setString(2, password);
 
             try (ResultSet rs = pst.executeQuery()) {
                 if (rs.next()) {
-                    new MainFrame(
-                            rs.getInt("user_id"),
-                            rs.getString("username"),
-                            rs.getString("role")
-                    ).setVisible(true);
-                    dispose();
+                    String storedPassword = rs.getString("password");
+                    boolean passwordMatches;
+
+                    if (storedPassword.startsWith("$2a$")) {
+                        passwordMatches = BCrypt.checkpw(password, storedPassword);
+                    } else {
+                        passwordMatches = password.equals(storedPassword);
+                    }
+
+                    if (passwordMatches) {
+                        new MainFrame(
+                                rs.getInt("user_id"),
+                                rs.getString("username"),
+                                rs.getString("role")
+                        ).setVisible(true);
+                        dispose();
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Invalid username or password.");
+                        txtPassword.setText("");
+                        txtPassword.requestFocus();
+                    }
                 } else {
                     JOptionPane.showMessageDialog(this, "Invalid username or password.");
                     txtPassword.setText("");
@@ -275,7 +290,6 @@ public class Login extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        bgPanel.setBackground(new java.awt.Color(240, 248, 255));
         bgPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         containerPanel.setBackground(new java.awt.Color(255, 255, 255));

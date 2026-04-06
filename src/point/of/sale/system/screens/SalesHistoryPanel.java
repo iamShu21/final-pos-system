@@ -1235,7 +1235,36 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
         totalProfitAutomatedValue = new javax.swing.JLabel();
         profitIcon = new javax.swing.JLabel();
         tblHeader = new RoundedPanel();
-        jLabel11 = new javax.swing.JLabel();
+        jLabel11 = new javax.swing.JLabel("Add New User") {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,
+                    java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+                float[] fractions = {0f, 1f};
+                java.awt.Color[] colors = {
+                    new java.awt.Color(135, 206, 250), // light blue
+                    java.awt.Color.WHITE
+                };
+
+                java.awt.LinearGradientPaint lgp = new java.awt.LinearGradientPaint(
+                    0, 0, getWidth(), 0,
+                    fractions, colors
+                );
+
+                g2.setPaint(lgp);
+
+                java.awt.FontMetrics fm = g2.getFontMetrics();
+                int x = (getWidth() - fm.stringWidth(getText())) / 2;
+                int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();
+
+                g2.drawString(getText(), x, y);
+
+                g2.dispose();
+            }
+        };
         btnExportToPDF = new javax.swing.JButton();
         btnExportToExcel = new javax.swing.JButton();
         btnRefresh = new javax.swing.JButton();
@@ -1325,7 +1354,7 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
 
         add(pnlTotalProfit, new org.netbeans.lib.awtextra.AbsoluteConstraints(850, 100, 240, 150));
 
-        tblHeader.setBackground(new java.awt.Color(255, 255, 255));
+        tblHeader.setBackground(new java.awt.Color(18, 48, 174));
         tblHeader.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jLabel11.setFont(new java.awt.Font("Tahoma", 1, 20)); // NOI18N

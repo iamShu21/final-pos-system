@@ -48,6 +48,8 @@ import javax.swing.SortOrder;
 import point.of.sale.system.classes.DBConnection;
 import point.of.sale.system.classes.RoundedPanel;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 import java.awt.Dialog;
 import java.awt.FontMetrics;
 import java.awt.Frame;
@@ -938,6 +940,12 @@ public class UserManagementPanel extends javax.swing.JPanel {
         cmbRole.addItem("Manager");
         cmbRole.addItem("Cashier");
         cmbRole.addItem("Inventory Clerk");
+
+        // RBAC: Restrict role selection for non-Super Admin
+        if (!"Super Admin".equalsIgnoreCase(loggedInUserRole)) {
+            cmbRole.removeItem("Super Admin");
+        }
+
         cmbRole.setSelectedIndex(0);
     }
 
@@ -1429,7 +1437,36 @@ public class UserManagementPanel extends javax.swing.JPanel {
         jLabel1 = new point.of.sale.system.classes.GradientFont();
         jLabel4 = new javax.swing.JLabel();
         jPanel4 = new RoundedPanel();
-        jLabel2 = new javax.swing.JLabel("Add New User") {     @Override     protected void paintComponent(java.awt.Graphics g) {         java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();          g2.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,                             java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);          float[] fractions = {0.5f, 1f};         java.awt.Color[] colors = {             java.awt.Color.WHITE,             java.awt.Color.BLUE         };          java.awt.LinearGradientPaint lgp = new java.awt.LinearGradientPaint(                 0, 0, getWidth(), 0,                 fractions, colors         );          g2.setPaint(lgp);          java.awt.FontMetrics fm = g2.getFontMetrics();         int x = (getWidth() - fm.stringWidth(getText())) / 2;         int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();          g2.drawString(getText(), x, y);          g2.dispose();     } };
+        jLabel2 = new javax.swing.JLabel("Add New User") {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,
+                    java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+                float[] fractions = {0f, 1f};
+                java.awt.Color[] colors = {
+                    new java.awt.Color(135, 206, 250), // light blue
+                    java.awt.Color.WHITE
+                };
+
+                java.awt.LinearGradientPaint lgp = new java.awt.LinearGradientPaint(
+                    0, 0, getWidth(), 0,
+                    fractions, colors
+                );
+
+                g2.setPaint(lgp);
+
+                java.awt.FontMetrics fm = g2.getFontMetrics();
+                int x = (getWidth() - fm.stringWidth(getText())) / 2;
+                int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();
+
+                g2.drawString(getText(), x, y);
+
+                g2.dispose();
+            }
+        };
         jLabel3 = new javax.swing.JLabel();
         txtSearchUser = new javax.swing.JTextField();
         btnEditUser = new javax.swing.JButton();
@@ -1437,7 +1474,36 @@ public class UserManagementPanel extends javax.swing.JPanel {
         jdialogLogHistory = new javax.swing.JPanel();
         jLabel5 = new javax.swing.JLabel();
         jPanel1 = new RoundedPanel();
-        lblAddNewUser = new javax.swing.JLabel("Add New User") {     @Override     protected void paintComponent(java.awt.Graphics g) {         java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();          g2.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,                             java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);          float[] fractions = {0.5f, 1f};         java.awt.Color[] colors = {             java.awt.Color.WHITE,             java.awt.Color.BLUE         };          java.awt.LinearGradientPaint lgp = new java.awt.LinearGradientPaint(                 0, 0, getWidth(), 0,                 fractions, colors         );          g2.setPaint(lgp);          java.awt.FontMetrics fm = g2.getFontMetrics();         int x = (getWidth() - fm.stringWidth(getText())) / 2;         int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();          g2.drawString(getText(), x, y);          g2.dispose();     } };
+        lblAddNewUser = new javax.swing.JLabel("Add New User") {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,
+                    java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+                float[] fractions = {0f, 1f};
+                java.awt.Color[] colors = {
+                    new java.awt.Color(135, 206, 250), // light blue
+                    java.awt.Color.WHITE
+                };
+
+                java.awt.LinearGradientPaint lgp = new java.awt.LinearGradientPaint(
+                    0, 0, getWidth(), 0,
+                    fractions, colors
+                );
+
+                g2.setPaint(lgp);
+
+                java.awt.FontMetrics fm = g2.getFontMetrics();
+                int x = (getWidth() - fm.stringWidth(getText())) / 2;
+                int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();
+
+                g2.drawString(getText(), x, y);
+
+                g2.dispose();
+            }
+        };
         jSeparator3 = new javax.swing.JSeparator();
         jSeparator1 = new javax.swing.JSeparator();
 
@@ -1451,18 +1517,22 @@ public class UserManagementPanel extends javax.swing.JPanel {
         pnlUserInformation.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         lblFirstName.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        lblFirstName.setForeground(new java.awt.Color(40, 55, 80));
         lblFirstName.setText("First Name:");
         pnlUserInformation.add(lblFirstName, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 80, -1, -1));
 
         lblMiddleName.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        lblMiddleName.setForeground(new java.awt.Color(40, 55, 80));
         lblMiddleName.setText("Middle Name:");
         pnlUserInformation.add(lblMiddleName, new org.netbeans.lib.awtextra.AbsoluteConstraints(330, 80, -1, -1));
 
         lblLastName.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        lblLastName.setForeground(new java.awt.Color(40, 55, 80));
         lblLastName.setText("Last Name:");
         pnlUserInformation.add(lblLastName, new org.netbeans.lib.awtextra.AbsoluteConstraints(610, 80, -1, -1));
 
         lblUsername.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        lblUsername.setForeground(new java.awt.Color(40, 55, 80));
         lblUsername.setText("Username:");
         pnlUserInformation.add(lblUsername, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 160, -1, -1));
 
@@ -1485,15 +1555,17 @@ public class UserManagementPanel extends javax.swing.JPanel {
         pnlUserInformation.add(cmbRole, new org.netbeans.lib.awtextra.AbsoluteConstraints(610, 180, 230, 40));
 
         lblRole.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        lblRole.setForeground(new java.awt.Color(40, 55, 80));
         lblRole.setText("Role:");
         pnlUserInformation.add(lblRole, new org.netbeans.lib.awtextra.AbsoluteConstraints(610, 160, -1, -1));
 
         lblPassword.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        lblPassword.setForeground(new java.awt.Color(40, 55, 80));
         lblPassword.setText("Password:");
         pnlUserInformation.add(lblPassword, new org.netbeans.lib.awtextra.AbsoluteConstraints(330, 160, -1, -1));
 
         lblPersonalDetails.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
-        lblPersonalDetails.setForeground(new java.awt.Color(240, 248, 255));
+        lblPersonalDetails.setForeground(new java.awt.Color(10, 25, 47));
         lblPersonalDetails.setText("Personal Details");
         pnlUserInformation.add(lblPersonalDetails, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 20, 200, -1));
 
@@ -1652,12 +1724,20 @@ public class UserManagementPanel extends javax.swing.JPanel {
             return;
         }
 
+        String role = cmbRole.getSelectedItem().toString();
+
+        // RBAC: Non-Super Admin cannot create Super Admin
+        if (!"Super Admin".equalsIgnoreCase(loggedInUserRole) && "Super Admin".equalsIgnoreCase(role)) {
+            JOptionPane.showMessageDialog(this, "Access denied: Cannot create Super Admin account.");
+            return;
+        }
+
         String firstName = normalizeSpaces(txtFirstName.getText());
         String middleName = normalizeSpaces(txtMiddleName.getText());
         String lastName = normalizeSpaces(txtLastName.getText());
         String username = txtUsername.getText().trim();
         String password = new String(txtPassword.getPassword());
-        String role = cmbRole.getSelectedItem().toString();
+        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
 
         String sql = "INSERT INTO users(first_name, middle_name, last_name, username, password, role, status) "
                 + "VALUES(?,?,?,?,?,?,?)";
@@ -1668,7 +1748,7 @@ public class UserManagementPanel extends javax.swing.JPanel {
             ps.setString(2, middleName);
             ps.setString(3, lastName);
             ps.setString(4, username);
-            ps.setString(5, password);
+            ps.setString(5, hashedPassword);
             ps.setString(6, role);
             ps.setString(7, "Active");
 
@@ -1695,11 +1775,34 @@ public class UserManagementPanel extends javax.swing.JPanel {
             return;
         }
 
+        String role = cmbRole.getSelectedItem().toString();
+
+        // RBAC: Non-Super Admin cannot modify Super Admin accounts or assign Super Admin role
+        if (!"Super Admin".equalsIgnoreCase(loggedInUserRole)) {
+            try (Connection con = DBConnection.dbConnection(); PreparedStatement ps = con.prepareStatement("SELECT role FROM users WHERE user_id = ?")) {
+
+                ps.setInt(1, selectedUserId);
+                ResultSet rs = ps.executeQuery();
+
+                if (rs.next() && "Super Admin".equalsIgnoreCase(rs.getString("role"))) {
+                    JOptionPane.showMessageDialog(this, "Access denied: Cannot modify Super Admin account.");
+                    return;
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Error checking user role: " + e.getMessage());
+                return;
+            }
+
+            if ("Super Admin".equalsIgnoreCase(role)) {
+                JOptionPane.showMessageDialog(this, "Access denied: Cannot assign Super Admin role.");
+                return;
+            }
+        }
+
         String firstName = normalizeSpaces(txtFirstName.getText());
         String middleName = normalizeSpaces(txtMiddleName.getText());
         String lastName = normalizeSpaces(txtLastName.getText());
         String username = txtUsername.getText().trim();
-        String role = cmbRole.getSelectedItem().toString();
 
         int confirm = JOptionPane.showConfirmDialog(
                 this,
@@ -1831,6 +1934,21 @@ public class UserManagementPanel extends javax.swing.JPanel {
         if (isLastManager(selectedUserId)) {
             JOptionPane.showMessageDialog(this, "You cannot delete the last Manager.");
             return;
+        }
+
+        // RBAC: Non-Super Admin cannot delete Super Admin accounts
+        if (!"Super Admin".equalsIgnoreCase(loggedInUserRole)) {
+            try (Connection con = DBConnection.dbConnection(); PreparedStatement ps = con.prepareStatement("SELECT role FROM users WHERE user_id = ?")) {
+                ps.setInt(1, selectedUserId);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next() && "Super Admin".equalsIgnoreCase(rs.getString("role"))) {
+                    JOptionPane.showMessageDialog(this, "Access denied: Cannot delete Super Admin accounts.");
+                    return;
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Error checking user role: " + e.getMessage());
+                return;
+            }
         }
 
         int confirm = JOptionPane.showConfirmDialog(

@@ -19,6 +19,7 @@ import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -70,6 +71,18 @@ public class DashboardPanel extends javax.swing.JPanel {
         initComponents();
         applyDashboardTheme();
         loadDashboardData();
+    }
+
+    private MainFrame getMainFrame() {
+        java.awt.Window window = javax.swing.SwingUtilities.getWindowAncestor(this);
+        return window instanceof MainFrame ? (MainFrame) window : null;
+    }
+
+    private void confirmAndNavigate(String message, Runnable navigationAction) {
+        int choice = JOptionPane.showConfirmDialog(this, message, "Confirm", JOptionPane.YES_NO_OPTION);
+        if (choice == JOptionPane.YES_OPTION && navigationAction != null) {
+            navigationAction.run();
+        }
     }
 
     private void applyDashboardTheme() {
@@ -812,6 +825,11 @@ public class DashboardPanel extends javax.swing.JPanel {
 
         suppliersCard.setBackground(new java.awt.Color(122, 170, 206));
         suppliersCard.setPreferredSize(new java.awt.Dimension(320, 150));
+        suppliersCard.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                suppliersCardMouseClicked(evt);
+            }
+        });
         suppliersCard.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         lblTotalSupplier.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
@@ -836,6 +854,11 @@ public class DashboardPanel extends javax.swing.JPanel {
 
         productsCard.setBackground(new java.awt.Color(122, 170, 206));
         productsCard.setPreferredSize(new java.awt.Dimension(320, 150));
+        productsCard.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                productsCardMouseClicked(evt);
+            }
+        });
         productsCard.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         lblTotalProducts.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
@@ -857,6 +880,11 @@ public class DashboardPanel extends javax.swing.JPanel {
 
         categoriesCard.setBackground(new java.awt.Color(122, 170, 206));
         categoriesCard.setPreferredSize(new java.awt.Dimension(320, 150));
+        categoriesCard.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                categoriesCardMouseClicked(evt);
+            }
+        });
         categoriesCard.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         lblTotalCat.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
@@ -879,6 +907,11 @@ public class DashboardPanel extends javax.swing.JPanel {
 
         stocksCard.setBackground(new java.awt.Color(122, 170, 206));
         stocksCard.setPreferredSize(new java.awt.Dimension(320, 150));
+        stocksCard.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                stocksCardMouseClicked(evt);
+            }
+        });
         stocksCard.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         lblStockItems.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
@@ -900,6 +933,11 @@ public class DashboardPanel extends javax.swing.JPanel {
 
         totalUserCard.setBackground(new java.awt.Color(122, 170, 206));
         totalUserCard.setPreferredSize(new java.awt.Dimension(320, 150));
+        totalUserCard.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                totalUserCardMouseClicked(evt);
+            }
+        });
         totalUserCard.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         lblTotalUsers.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
@@ -921,6 +959,11 @@ public class DashboardPanel extends javax.swing.JPanel {
 
         salesCard.setBackground(new java.awt.Color(122, 170, 206));
         salesCard.setPreferredSize(new java.awt.Dimension(320, 150));
+        salesCard.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                salesCardMouseClicked(evt);
+            }
+        });
         salesCard.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         lblSales.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
@@ -1021,6 +1064,60 @@ public class DashboardPanel extends javax.swing.JPanel {
         jSeparator1.setOrientation(javax.swing.SwingConstants.VERTICAL);
         add(jSeparator1, new org.netbeans.lib.awtextra.AbsoluteConstraints(1100, 40, 20, 90));
     }// </editor-fold>//GEN-END:initComponents
+
+    private void productsCardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_productsCardMouseClicked
+        confirmAndNavigate("Open Products module?", () -> {
+            MainFrame mainFrame = getMainFrame();
+            if (mainFrame != null) {
+                mainFrame.openProductsModule();
+            }
+        });
+    }//GEN-LAST:event_productsCardMouseClicked
+
+    private void categoriesCardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_categoriesCardMouseClicked
+        confirmAndNavigate("Open Categories module?", () -> {
+            MainFrame mainFrame = getMainFrame();
+            if (mainFrame != null) {
+                mainFrame.openCategoriesModule();
+            }
+        });
+    }//GEN-LAST:event_categoriesCardMouseClicked
+
+    private void suppliersCardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_suppliersCardMouseClicked
+        confirmAndNavigate("Open Suppliers module?", () -> {
+            MainFrame mainFrame = getMainFrame();
+            if (mainFrame != null) {
+                mainFrame.openSuppliersModule();
+            }
+        });
+    }//GEN-LAST:event_suppliersCardMouseClicked
+
+    private void totalUserCardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_totalUserCardMouseClicked
+        confirmAndNavigate("Open Users module?", () -> {
+            MainFrame mainFrame = getMainFrame();
+            if (mainFrame != null) {
+                mainFrame.openUsersModule();
+            }
+        });
+    }//GEN-LAST:event_totalUserCardMouseClicked
+
+    private void salesCardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_salesCardMouseClicked
+        confirmAndNavigate("Open Daily Sales report?", () -> {
+            MainFrame mainFrame = getMainFrame();
+            if (mainFrame != null) {
+                mainFrame.openReportsDailySales();
+            }
+        });
+    }//GEN-LAST:event_salesCardMouseClicked
+
+    private void stocksCardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_stocksCardMouseClicked
+        confirmAndNavigate("Open Low Stock report?", () -> {
+            MainFrame mainFrame = getMainFrame();
+            if (mainFrame != null) {
+                mainFrame.openReportsLowStock();
+            }
+        });
+    }//GEN-LAST:event_stocksCardMouseClicked
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

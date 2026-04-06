@@ -90,6 +90,16 @@ public class ReportsPanel extends javax.swing.JPanel {
         applyCurrentReport();
     }
 
+    public void showDailySalesReport() {
+        activateReportCard(pnlDailySalesReport);
+        loadDailySalesReport();
+    }
+
+    public void showLowStockReport() {
+        activateReportCard(pnlLowStockReport);
+        loadLowStockReport();
+    }
+
     private int hoveredReportRow = -1;
 
     private void initializeTable() {
@@ -1311,7 +1321,36 @@ public class ReportsPanel extends javax.swing.JPanel {
         pnlExportButtons = new RoundedPanel();
         btnExportPDF = new javax.swing.JButton();
         btnExportExcel = new javax.swing.JButton();
-        lblCurrentReportTitle = new javax.swing.JLabel();
+        lblCurrentReportTitle = new javax.swing.JLabel("Add New User") {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,
+                    java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+                float[] fractions = {0f, 1f};
+                java.awt.Color[] colors = {
+                    new java.awt.Color(135, 206, 250), // light blue
+                    java.awt.Color.WHITE
+                };
+
+                java.awt.LinearGradientPaint lgp = new java.awt.LinearGradientPaint(
+                    0, 0, getWidth(), 0,
+                    fractions, colors
+                );
+
+                g2.setPaint(lgp);
+
+                java.awt.FontMetrics fm = g2.getFontMetrics();
+                int x = (getWidth() - fm.stringWidth(getText())) / 2;
+                int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();
+
+                g2.drawString(getText(), x, y);
+
+                g2.dispose();
+            }
+        };
         jPanel1 = new RoundedPanel();
         scrollReportsTable = new javax.swing.JScrollPane();
         tblReports = new javax.swing.JTable();
@@ -1348,14 +1387,14 @@ public class ReportsPanel extends javax.swing.JPanel {
         setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         lblReportsModule.setFont(new java.awt.Font("Tahoma", 1, 36)); // NOI18N
-        lblReportsModule.setText("REPORTS MODULE");
-        add(lblReportsModule, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 340, -1));
+        lblReportsModule.setText("REPORTS ");
+        add(lblReportsModule, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 190, -1));
 
         lblSubTitle.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
         lblSubTitle.setText("View different reports");
         add(lblSubTitle, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, -1, -1));
 
-        pnlExportButtons.setBackground(new java.awt.Color(255, 255, 255));
+        pnlExportButtons.setBackground(new java.awt.Color(18, 48, 174));
         pnlExportButtons.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         btnExportPDF.setText("Export to PDF");
@@ -1536,7 +1575,7 @@ public class ReportsPanel extends javax.swing.JPanel {
 
         jSeparator3.setBackground(new java.awt.Color(0, 0, 0));
         jSeparator3.setForeground(new java.awt.Color(0, 0, 0));
-        add(jSeparator3, new org.netbeans.lib.awtextra.AbsoluteConstraints(380, 30, 720, 10));
+        add(jSeparator3, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 30, 890, 10));
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnApplyFilterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnApplyFilterActionPerformed

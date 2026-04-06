@@ -1348,11 +1348,98 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         jLabel11 = new javax.swing.JLabel();
         StockOutQuantity = new javax.swing.JTextField();
         jPanel4 = new RoundedPanel();
-        jLabel3 = new javax.swing.JLabel("Add New User") {     @Override     protected void paintComponent(java.awt.Graphics g) {         java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();          g2.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,                             java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);          float[] fractions = {0.5f, 1f};         java.awt.Color[] colors = {             java.awt.Color.WHITE,             java.awt.Color.BLUE         };          java.awt.LinearGradientPaint lgp = new java.awt.LinearGradientPaint(                 0, 0, getWidth(), 0,                 fractions, colors         );          g2.setPaint(lgp);          java.awt.FontMetrics fm = g2.getFontMetrics();         int x = (getWidth() - fm.stringWidth(getText())) / 2;         int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();          g2.drawString(getText(), x, y);          g2.dispose();     } };
+        jLabel3 = new javax.swing.JLabel("Add New User") {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,
+                    java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+                float[] fractions = {0f, 1f};
+                java.awt.Color[] colors = {
+                    new java.awt.Color(135, 206, 250), // light blue
+                    java.awt.Color.WHITE
+                };
+
+                java.awt.LinearGradientPaint lgp = new java.awt.LinearGradientPaint(
+                    0, 0, getWidth(), 0,
+                    fractions, colors
+                );
+
+                g2.setPaint(lgp);
+
+                java.awt.FontMetrics fm = g2.getFontMetrics();
+                int x = (getWidth() - fm.stringWidth(getText())) / 2;
+                int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();
+
+                g2.drawString(getText(), x, y);
+
+                g2.dispose();
+            }
+        };
         jPanel8 = new RoundedPanel();
-        jLabel4 = new javax.swing.JLabel("Add New User") {     @Override     protected void paintComponent(java.awt.Graphics g) {         java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();          g2.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,                             java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);          float[] fractions = {0.5f, 1f};         java.awt.Color[] colors = {             java.awt.Color.WHITE,             java.awt.Color.BLUE         };          java.awt.LinearGradientPaint lgp = new java.awt.LinearGradientPaint(                 0, 0, getWidth(), 0,                 fractions, colors         );          g2.setPaint(lgp);          java.awt.FontMetrics fm = g2.getFontMetrics();         int x = (getWidth() - fm.stringWidth(getText())) / 2;         int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();          g2.drawString(getText(), x, y);          g2.dispose();     } };
+        jLabel4 = new javax.swing.JLabel("Add New User") {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,
+                    java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+                float[] fractions = {0f, 1f};
+                java.awt.Color[] colors = {
+                    new java.awt.Color(135, 206, 250), // light blue
+                    java.awt.Color.WHITE
+                };
+
+                java.awt.LinearGradientPaint lgp = new java.awt.LinearGradientPaint(
+                    0, 0, getWidth(), 0,
+                    fractions, colors
+                );
+
+                g2.setPaint(lgp);
+
+                java.awt.FontMetrics fm = g2.getFontMetrics();
+                int x = (getWidth() - fm.stringWidth(getText())) / 2;
+                int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();
+
+                g2.drawString(getText(), x, y);
+
+                g2.dispose();
+            }
+        };
         jPanel5 = new RoundedPanel();
-        jLabel17 = new javax.swing.JLabel("Add New User") {     @Override     protected void paintComponent(java.awt.Graphics g) {         java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();          g2.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,                             java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);          float[] fractions = {0.5f, 1f};         java.awt.Color[] colors = {             java.awt.Color.WHITE,             java.awt.Color.BLUE         };          java.awt.LinearGradientPaint lgp = new java.awt.LinearGradientPaint(                 0, 0, getWidth(), 0,                 fractions, colors         );          g2.setPaint(lgp);          java.awt.FontMetrics fm = g2.getFontMetrics();         int x = (getWidth() - fm.stringWidth(getText())) / 2;         int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();          g2.drawString(getText(), x, y);          g2.dispose();     } };
+        jLabel17 = new javax.swing.JLabel("Add New User") {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,
+                    java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+                float[] fractions = {0f, 1f};
+                java.awt.Color[] colors = {
+                    new java.awt.Color(135, 206, 250), // light blue
+                    java.awt.Color.WHITE
+                };
+
+                java.awt.LinearGradientPaint lgp = new java.awt.LinearGradientPaint(
+                    0, 0, getWidth(), 0,
+                    fractions, colors
+                );
+
+                g2.setPaint(lgp);
+
+                java.awt.FontMetrics fm = g2.getFontMetrics();
+                int x = (getWidth() - fm.stringWidth(getText())) / 2;
+                int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();
+
+                g2.drawString(getText(), x, y);
+
+                g2.dispose();
+            }
+        };
         jSeparator3 = new javax.swing.JSeparator();
         pnlBasta = new RoundedPanel();
         cmbFilterCategory = new javax.swing.JComboBox<>();
@@ -1416,22 +1503,27 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jLabel5.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        jLabel5.setForeground(new java.awt.Color(40, 55, 80));
         jLabel5.setText("Select Product:");
         jPanel1.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 20, -1, -1));
 
         jLabel6.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        jLabel6.setForeground(new java.awt.Color(40, 55, 80));
         jLabel6.setText("Quantity:");
         jPanel1.add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 20, -1, -1));
 
         jLabel7.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        jLabel7.setForeground(new java.awt.Color(40, 55, 80));
         jLabel7.setText("Date:");
         jPanel1.add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 110, -1, -1));
 
         jLabel8.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        jLabel8.setForeground(new java.awt.Color(40, 55, 80));
         jLabel8.setText("Reference Number:");
         jPanel1.add(jLabel8, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 110, -1, -1));
 
         jLabel9.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        jLabel9.setForeground(new java.awt.Color(40, 55, 80));
         jLabel9.setText("Remarks:");
         jPanel1.add(jLabel9, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 190, -1, -1));
 
@@ -1468,6 +1560,7 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         jPanel3.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jLabel10.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        jLabel10.setForeground(new java.awt.Color(40, 55, 80));
         jLabel10.setText("Select Product:");
         jPanel3.add(jLabel10, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 20, -1, -1));
 
@@ -1475,6 +1568,7 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         jPanel3.add(cmbStockOutProduct, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 40, 150, 40));
 
         jLabel12.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        jLabel12.setForeground(new java.awt.Color(40, 55, 80));
         jLabel12.setText("Reason:");
         jPanel3.add(jLabel12, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 100, -1, -1));
 
@@ -1492,10 +1586,12 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         jPanel3.add(dateAutoGenerated, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 120, 150, 40));
 
         jLabel13.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        jLabel13.setForeground(new java.awt.Color(40, 55, 80));
         jLabel13.setText("Date:");
         jPanel3.add(jLabel13, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 100, -1, -1));
 
         jLabel11.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        jLabel11.setForeground(new java.awt.Color(40, 55, 80));
         jLabel11.setText("Quantity:");
         jPanel3.add(jLabel11, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 20, -1, -1));
 
@@ -1538,33 +1634,33 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         jSeparator3.setForeground(new java.awt.Color(0, 0, 0));
         add(jSeparator3, new org.netbeans.lib.awtextra.AbsoluteConstraints(510, 30, 310, 10));
 
-        pnlBasta.setBackground(new java.awt.Color(18, 48, 174));
+        pnlBasta.setBackground(new java.awt.Color(122, 170, 206));
         pnlBasta.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         cmbFilterCategory.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         cmbFilterCategory.addActionListener(this::cmbFilterCategoryActionPerformed);
-        pnlBasta.add(cmbFilterCategory, new org.netbeans.lib.awtextra.AbsoluteConstraints(280, 30, 230, 40));
+        pnlBasta.add(cmbFilterCategory, new org.netbeans.lib.awtextra.AbsoluteConstraints(280, 35, 230, 40));
 
         jLabel15.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
-        jLabel15.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel15.setForeground(new java.awt.Color(40, 55, 80));
         jLabel15.setText("Filter by Category:");
-        pnlBasta.add(jLabel15, new org.netbeans.lib.awtextra.AbsoluteConstraints(280, 10, -1, -1));
+        pnlBasta.add(jLabel15, new org.netbeans.lib.awtextra.AbsoluteConstraints(280, 13, -1, -1));
 
         txtSearch.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         txtSearch.addActionListener(this::txtSearchActionPerformed);
-        pnlBasta.add(txtSearch, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, 220, 40));
+        pnlBasta.add(txtSearch, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 35, 220, 40));
 
         jLabel14.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
-        jLabel14.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel14.setForeground(new java.awt.Color(40, 55, 80));
         jLabel14.setText("Search:");
-        pnlBasta.add(jLabel14, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 10, 60, -1));
+        pnlBasta.add(jLabel14, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 13, 60, -1));
 
         btnRefresh.setBackground(new java.awt.Color(44, 62, 80));
         btnRefresh.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         btnRefresh.setForeground(new java.awt.Color(255, 255, 255));
         btnRefresh.setText("Refresh");
         btnRefresh.addActionListener(this::btnRefreshActionPerformed);
-        pnlBasta.add(btnRefresh, new org.netbeans.lib.awtextra.AbsoluteConstraints(590, 40, 90, 30));
+        pnlBasta.add(btnRefresh, new org.netbeans.lib.awtextra.AbsoluteConstraints(590, 30, 90, 30));
 
         add(pnlBasta, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 150, 710, 100));
         add(pnlAlert, new org.netbeans.lib.awtextra.AbsoluteConstraints(830, 10, 280, 130));
@@ -1591,7 +1687,8 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_cmbStockInProductActionPerformed
 
     private void btnRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRefreshActionPerformed
-       
+        loadAllInventoryData();
+        generateNextReferenceNumber();
     }//GEN-LAST:event_btnRefreshActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

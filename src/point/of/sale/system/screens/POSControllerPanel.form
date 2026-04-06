@@ -168,7 +168,7 @@
               <Font name="Tahoma" size="16" style="0"/>
             </Property>
             <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-              <Color blue="ff" green="ff" red="ff" type="rgb"/>
+              <Color blue="50" green="37" red="28" type="rgb"/>
             </Property>
             <Property name="text" type="java.lang.String" value="Search for product name or barcode"/>
           </Properties>
@@ -228,7 +228,7 @@
               <Font name="Tahoma" size="24" style="1"/>
             </Property>
             <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-              <Color blue="ff" green="ff" red="ff" type="rgb"/>
+              <Color blue="50" green="37" red="28" type="rgb"/>
             </Property>
             <Property name="text" type="java.lang.String" value="Computation"/>
           </Properties>
@@ -244,7 +244,7 @@
               <Font name="Tahoma" size="16" style="0"/>
             </Property>
             <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-              <Color blue="ff" green="ff" red="ff" type="rgb"/>
+              <Color blue="50" green="37" red="28" type="rgb"/>
             </Property>
             <Property name="text" type="java.lang.String" value="Subtotal:"/>
           </Properties>
@@ -260,7 +260,7 @@
               <Font name="Tahoma" size="16" style="0"/>
             </Property>
             <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-              <Color blue="ff" green="ff" red="ff" type="rgb"/>
+              <Color blue="50" green="37" red="28" type="rgb"/>
             </Property>
             <Property name="text" type="java.lang.String" value="Discount:"/>
           </Properties>
@@ -276,7 +276,7 @@
               <Font name="Tahoma" size="16" style="0"/>
             </Property>
             <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-              <Color blue="ff" green="ff" red="ff" type="rgb"/>
+              <Color blue="50" green="37" red="28" type="rgb"/>
             </Property>
             <Property name="text" type="java.lang.String" value="VAT (12%):"/>
           </Properties>
@@ -352,7 +352,7 @@
               <Font name="Tahoma" size="18" style="1"/>
             </Property>
             <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-              <Color blue="ff" green="ff" red="ff" type="rgb"/>
+              <Color blue="50" green="37" red="28" type="rgb"/>
             </Property>
             <Property name="text" type="java.lang.String" value="Total:"/>
           </Properties>
@@ -406,7 +406,7 @@
               <Font name="Tahoma" size="24" style="1"/>
             </Property>
             <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-              <Color blue="ff" green="ff" red="ff" type="rgb"/>
+              <Color blue="50" green="37" red="28" type="rgb"/>
             </Property>
             <Property name="text" type="java.lang.String" value="Payment Methods"/>
           </Properties>
@@ -422,7 +422,7 @@
               <Font name="Tahoma" size="16" style="0"/>
             </Property>
             <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-              <Color blue="ff" green="ff" red="ff" type="rgb"/>
+              <Color blue="50" green="37" red="28" type="rgb"/>
             </Property>
             <Property name="text" type="java.lang.String" value="Cash Tendered:"/>
           </Properties>
@@ -438,7 +438,7 @@
               <Font name="Tahoma" size="16" style="0"/>
             </Property>
             <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-              <Color blue="ff" green="ff" red="ff" type="rgb"/>
+              <Color blue="50" green="37" red="28" type="rgb"/>
             </Property>
             <Property name="text" type="java.lang.String" value="Change:"/>
           </Properties>
@@ -613,7 +613,7 @@
             <Property name="text" type="java.lang.String" value="Shopping Cart"/>
           </Properties>
           <AuxValues>
-            <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new javax.swing.JLabel(&quot;Add New User&quot;) {     @Override     protected void paintComponent(java.awt.Graphics g) {         java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();          g2.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,                             java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);          float[] fractions = {0.5f, 1f};         java.awt.Color[] colors = {             java.awt.Color.WHITE,             java.awt.Color.BLUE         };          java.awt.LinearGradientPaint lgp = new java.awt.LinearGradientPaint(                 0, 0, getWidth(), 0,                 fractions, colors         );          g2.setPaint(lgp);          java.awt.FontMetrics fm = g2.getFontMetrics();         int x = (getWidth() - fm.stringWidth(getText())) / 2;         int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();          g2.drawString(getText(), x, y);          g2.dispose();     } }"/>
+            <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new javax.swing.JLabel(&quot;Add New User&quot;) {&#xd;&#xa;    @Override&#xd;&#xa;    protected void paintComponent(java.awt.Graphics g) {&#xd;&#xa;        java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();&#xd;&#xa;&#xd;&#xa;        g2.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,&#xd;&#xa;                java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);&#xd;&#xa;&#xd;&#xa;        float[] fractions = {0f, 1f};&#xd;&#xa;        java.awt.Color[] colors = {&#xd;&#xa;            new java.awt.Color(135, 206, 250), // light blue&#xd;&#xa;            java.awt.Color.WHITE&#xd;&#xa;        };&#xd;&#xa;&#xd;&#xa;        java.awt.LinearGradientPaint lgp = new java.awt.LinearGradientPaint(&#xd;&#xa;                0, 0, getWidth(), 0,&#xd;&#xa;                fractions, colors&#xd;&#xa;        );&#xd;&#xa;&#xd;&#xa;        g2.setPaint(lgp);&#xd;&#xa;&#xd;&#xa;        java.awt.FontMetrics fm = g2.getFontMetrics();&#xd;&#xa;        int x = (getWidth() - fm.stringWidth(getText())) / 2;&#xd;&#xa;        int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();&#xd;&#xa;&#xd;&#xa;        g2.drawString(getText(), x, y);&#xd;&#xa;&#xd;&#xa;        g2.dispose();&#xd;&#xa;    }&#xd;&#xa;};"/>
           </AuxValues>
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
@@ -679,7 +679,7 @@
               <Font name="Tahoma" size="17" style="1"/>
             </Property>
             <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-              <Color blue="ff" green="ff" red="ff" type="rgb"/>
+              <Color blue="50" green="37" red="28" type="rgb"/>
             </Property>
             <Property name="text" type="java.lang.String" value="Click to preview product"/>
           </Properties>
