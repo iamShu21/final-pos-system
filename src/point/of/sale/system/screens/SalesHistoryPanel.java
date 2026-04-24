@@ -100,6 +100,7 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
         initializeTable();
         loadSalesDataFromDatabase();
         loadCashierList();
+        loadProductNameList();
         setupFilters();
         setupTableContextMenu();
         applyFilters();
@@ -109,6 +110,7 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
     public void refreshSalesHistoryRealtime() {
         loadSalesDataFromDatabase();
         loadCashierList();
+        loadProductNameList();
         applyFilters();
 
         tableModel.fireTableDataChanged();
@@ -126,6 +128,7 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
 
         loadSalesDataFromDatabase();
         loadCashierList();
+        loadProductNameList();
         applyFilters();
 
         tableModel.fireTableDataChanged();
@@ -147,7 +150,7 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
         tableModel = new DefaultTableModel(
                 new Object[][]{},
                 new String[]{
-                    "Invoice Number", "Date", "Cashier", "Items", "Total Amount", "Payment Method"
+                    "Invoice Number", "Date", "Cashier", "Product Name", "Items", "Total Amount", "Payment Method", "Profit", "VAT"
                 }
         ) {
             @Override
@@ -184,24 +187,18 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
                 + "    s.sale_id, "
                 + "    s.invoice_number, "
                 + "    s.sale_date, "
-                + "    TRIM(CONCAT( "
-                + "        COALESCE(u.first_name, ''), ' ', "
-                + "        COALESCE(NULLIF(u.middle_name, ''), ''), "
-                + "        CASE "
-                + "            WHEN COALESCE(NULLIF(u.middle_name, ''), '') = '' THEN '' "
-                + "            ELSE ' ' "
-                + "        END, "
-                + "        COALESCE(u.last_name, '') "
-                + "    )) AS cashier, "
+                + "    u.username AS cashier, "
                 + "    COALESCE(SUM(sd.quantity), 0) AS total_items, "
                 + "    COALESCE(s.total_amount, 0) AS total_amount, "
                 + "    COALESCE(s.payment_method, '') AS payment_method, "
-                + "    COALESCE(SUM(((COALESCE(sd.price, 0) - COALESCE(p.cost_price, 0)) * COALESCE(sd.quantity, 0)) - COALESCE(sd.discount, 0)), 0) AS total_profit "
+                + "    COALESCE(SUM(((COALESCE(sd.price, 0) - COALESCE(p.cost_price, 0)) * COALESCE(sd.quantity, 0)) - COALESCE(sd.discount, 0)), 0) AS total_profit, "
+                + "    COALESCE(s.vat, 0) AS vat, "
+                + "    GROUP_CONCAT(DISTINCT p.name) AS product_names "
                 + "FROM sales s "
                 + "INNER JOIN users u ON s.user_id = u.user_id "
                 + "LEFT JOIN sales_details sd ON s.sale_id = sd.sale_id "
                 + "LEFT JOIN products p ON sd.product_id = p.product_id "
-                + "GROUP BY s.sale_id, s.invoice_number, s.sale_date, u.first_name, u.middle_name, u.last_name, s.total_amount, s.payment_method "
+                + "GROUP BY s.sale_id, s.invoice_number, s.sale_date, u.first_name, u.middle_name, u.last_name, s.total_amount, s.payment_method, s.vat "
                 + "ORDER BY s.sale_date DESC";
 
         Connection conn = null;
@@ -223,6 +220,8 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
                 record.totalAmount = rs.getDouble("total_amount");
                 record.paymentMethod = rs.getString("payment_method");
                 record.profit = rs.getDouble("total_profit");
+                record.vat = rs.getDouble("vat");
+                record.productNames = rs.getString("product_names");
 
                 allSalesRecords.add(record);
             }
@@ -341,6 +340,47 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
             }
         } else {
             listOfCashiers.setSelectedIndex(0);
+        }
+    }
+
+    private void loadProductNameList() {
+        Object previousSelection = cmbProductName.getSelectedItem();
+
+        cmbProductName.removeAllItems();
+        cmbProductName.addItem("All Products");
+
+        Set<String> productNameSet = new LinkedHashSet<>();
+
+        for (SalesRecord record : allSalesRecords) {
+            if (record.productNames != null) {
+                String[] names = record.productNames.split(", ");
+                for (String name : names) {
+                    if (!name.trim().isEmpty()) {
+                        productNameSet.add(name.trim());
+                    }
+                }
+            }
+        }
+
+        for (String name : productNameSet) {
+            cmbProductName.addItem(name);
+        }
+
+        if (previousSelection != null) {
+            boolean found = false;
+            for (int i = 0; i < cmbProductName.getItemCount(); i++) {
+                if (previousSelection.toString().equalsIgnoreCase(cmbProductName.getItemAt(i))) {
+                    cmbProductName.setSelectedIndex(i);
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                cmbProductName.setSelectedIndex(0);
+            }
+        } else {
+            cmbProductName.setSelectedIndex(0);
         }
     }
 
@@ -779,16 +819,20 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
             table.getColumnModel().getColumn(i).setCellRenderer(bodyRenderer);
         }
 
-        if (table.getColumnCount() >= 6) {
-            table.getColumnModel().getColumn(0).setPreferredWidth(240);
-            table.getColumnModel().getColumn(1).setPreferredWidth(230);
-            table.getColumnModel().getColumn(2).setPreferredWidth(300);
-            table.getColumnModel().getColumn(3).setPreferredWidth(90);
-            table.getColumnModel().getColumn(4).setPreferredWidth(160);
-            table.getColumnModel().getColumn(5).setPreferredWidth(150);
+        if (table.getColumnCount() >= 9) {
+            table.getColumnModel().getColumn(0).setPreferredWidth(240); // Invoice Number
+            table.getColumnModel().getColumn(1).setPreferredWidth(230); // Date
+            table.getColumnModel().getColumn(2).setPreferredWidth(160); // Cashier
+            table.getColumnModel().getColumn(3).setPreferredWidth(220); // Product Name
+            table.getColumnModel().getColumn(4).setPreferredWidth(70);  // Items
+            table.getColumnModel().getColumn(5).setPreferredWidth(140); // Total Amount
+            table.getColumnModel().getColumn(6).setPreferredWidth(140); // Payment Method
+            table.getColumnModel().getColumn(7).setPreferredWidth(120); // Profit
+            table.getColumnModel().getColumn(8).setPreferredWidth(100); // VAT
         }
 
         scrollPane.setVerticalScrollBar(new ModernScrollBar());
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setHorizontalScrollBar(new ModernScrollBar());
 
         wrapScrollPaneInCard(scrollPane);
@@ -957,6 +1001,10 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
             applyFilters();
         });
 
+        cmbProductName.addActionListener((java.awt.event.ActionEvent e) -> {
+            applyFilters();
+        });
+
         dateFrom.addPropertyChangeListener("date", (PropertyChangeEvent evt) -> {
             applyFilters();
         });
@@ -986,6 +1034,10 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
                 ? "All Cashiers"
                 : listOfCashiers.getSelectedItem().toString();
 
+        String selectedProduct = cmbProductName.getSelectedItem() == null
+                ? "All Products"
+                : cmbProductName.getSelectedItem().toString();
+
         Date fromDate = dateFrom.getDate();
         Date toDate = dateTo.getDate();
 
@@ -993,23 +1045,32 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
             SalesRecord record = allSalesRecords.get(i);
 
             boolean matchesInvoice = invoiceSearch.length() == 0
-                    || (record.invoiceNumber != null && record.invoiceNumber.toLowerCase().contains(invoiceSearch));
+                    || (record.invoiceNumber != null
+                    && record.invoiceNumber.toLowerCase().contains(invoiceSearch));
 
             boolean matchesCashier = "All Cashiers".equalsIgnoreCase(selectedCashier)
-                    || (record.cashier != null && record.cashier.equalsIgnoreCase(selectedCashier));
+                    || (record.cashier != null
+                    && record.cashier.equalsIgnoreCase(selectedCashier));
+
+            boolean matchesProduct = "All Products".equalsIgnoreCase(selectedProduct)
+                    || (record.productNames != null
+                    && record.productNames.toLowerCase().contains(selectedProduct.toLowerCase()));
 
             boolean matchesDate = isWithinDateRange(record.date, fromDate, toDate);
 
-            if (matchesInvoice && matchesCashier && matchesDate) {
+            if (matchesInvoice && matchesCashier && matchesProduct && matchesDate) {
                 filteredSalesRecords.add(record);
 
                 tableModel.addRow(new Object[]{
                     nullToEmpty(record.invoiceNumber),
                     formatTableDate(record.date),
                     nullToEmpty(record.cashier),
+                    nullToEmpty(record.productNames),
                     Integer.valueOf(record.items),
                     formatPeso(record.totalAmount),
-                    nullToEmpty(record.paymentMethod)
+                    nullToEmpty(record.paymentMethod),
+                    formatPeso(record.profit),
+                    formatPeso(record.vat)
                 });
             }
         }
@@ -1641,15 +1702,28 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
             document.add(new Paragraph("Generated on: " + tableDateFormat.format(new Date())));
             document.add(new Paragraph(" "));
 
-            Table pdfTable = new Table(UnitValue.createPercentArray(new float[]{3f, 3f, 3f, 1.5f, 2.5f, 2.5f}));
+            Table pdfTable = new Table(UnitValue.createPercentArray(new float[]{
+                3.2f, // Invoice Number
+                3.2f, // Date
+                2.4f, // Cashier
+                3.0f, // Product Name
+                1.2f, // Items
+                2.0f, // Total Amount
+                2.0f, // Payment Method
+                1.8f, // Profit
+                1.5f // VAT
+            }));
             pdfTable.setWidth(UnitValue.createPercentValue(100));
 
             pdfTable.addHeaderCell(new Cell().add(new Paragraph("Invoice Number").setBold()));
             pdfTable.addHeaderCell(new Cell().add(new Paragraph("Date").setBold()));
             pdfTable.addHeaderCell(new Cell().add(new Paragraph("Cashier").setBold()));
+            pdfTable.addHeaderCell(new Cell().add(new Paragraph("Product Name").setBold()));
             pdfTable.addHeaderCell(new Cell().add(new Paragraph("Items").setBold()));
             pdfTable.addHeaderCell(new Cell().add(new Paragraph("Total Amount").setBold()));
             pdfTable.addHeaderCell(new Cell().add(new Paragraph("Payment Method").setBold()));
+            pdfTable.addHeaderCell(new Cell().add(new Paragraph("Profit").setBold()));
+            pdfTable.addHeaderCell(new Cell().add(new Paragraph("VAT").setBold()));
 
             for (int i = 0; i < filteredSalesRecords.size(); i++) {
                 SalesRecord record = filteredSalesRecords.get(i);
@@ -1657,9 +1731,12 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
                 pdfTable.addCell(new Cell().add(new Paragraph(nullToEmpty(record.invoiceNumber))));
                 pdfTable.addCell(new Cell().add(new Paragraph(formatTableDate(record.date))));
                 pdfTable.addCell(new Cell().add(new Paragraph(nullToEmpty(record.cashier))));
+                pdfTable.addCell(new Cell().add(new Paragraph(nullToEmpty(record.productNames))));
                 pdfTable.addCell(new Cell().add(new Paragraph(String.valueOf(record.items))));
                 pdfTable.addCell(new Cell().add(new Paragraph(formatPeso(record.totalAmount))));
                 pdfTable.addCell(new Cell().add(new Paragraph(nullToEmpty(record.paymentMethod))));
+                pdfTable.addCell(new Cell().add(new Paragraph(formatPeso(record.profit))));
+                pdfTable.addCell(new Cell().add(new Paragraph(formatPeso(record.vat))));
             }
 
             document.add(pdfTable);
@@ -1698,6 +1775,8 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
         double totalAmount;
         String paymentMethod;
         double profit;
+        double vat;
+        String productNames;
     }
 
     /**
@@ -1775,6 +1854,8 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
         dateTo = new com.toedter.calendar.JDateChooser();
         listOfCashiers = new javax.swing.JComboBox<>();
         searchInvoiceNumber = new javax.swing.JTextField();
+        jLabel12 = new javax.swing.JLabel();
+        cmbProductName = new javax.swing.JComboBox<>();
         jSeparator1 = new javax.swing.JSeparator();
         jSeparator3 = new javax.swing.JSeparator();
 
@@ -1881,11 +1962,11 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
 
             },
             new String [] {
-                "Invoice Number", "Date", "Cashier", "Items", "Total Amount", "Payment Method"
+                "Invoice Number", "Date", "Product Name", "Cashier", "Items", "Total Amount", "Payment Method", "Profit", "VAT"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false
+                false, false, false, false, false, false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -1900,13 +1981,19 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
             tblSalesTransaction.getColumnModel().getColumn(1).setResizable(false);
             tblSalesTransaction.getColumnModel().getColumn(1).setPreferredWidth(160);
             tblSalesTransaction.getColumnModel().getColumn(2).setResizable(false);
-            tblSalesTransaction.getColumnModel().getColumn(2).setPreferredWidth(180);
+            tblSalesTransaction.getColumnModel().getColumn(2).setPreferredWidth(190);
             tblSalesTransaction.getColumnModel().getColumn(3).setResizable(false);
-            tblSalesTransaction.getColumnModel().getColumn(3).setPreferredWidth(60);
+            tblSalesTransaction.getColumnModel().getColumn(3).setPreferredWidth(150);
             tblSalesTransaction.getColumnModel().getColumn(4).setResizable(false);
-            tblSalesTransaction.getColumnModel().getColumn(4).setPreferredWidth(150);
+            tblSalesTransaction.getColumnModel().getColumn(4).setPreferredWidth(60);
             tblSalesTransaction.getColumnModel().getColumn(5).setResizable(false);
-            tblSalesTransaction.getColumnModel().getColumn(5).setPreferredWidth(160);
+            tblSalesTransaction.getColumnModel().getColumn(5).setPreferredWidth(150);
+            tblSalesTransaction.getColumnModel().getColumn(6).setResizable(false);
+            tblSalesTransaction.getColumnModel().getColumn(6).setPreferredWidth(160);
+            tblSalesTransaction.getColumnModel().getColumn(7).setResizable(false);
+            tblSalesTransaction.getColumnModel().getColumn(7).setPreferredWidth(170);
+            tblSalesTransaction.getColumnModel().getColumn(8).setResizable(false);
+            tblSalesTransaction.getColumnModel().getColumn(8).setPreferredWidth(170);
         }
 
         jPanel1.add(tableScrollPane, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 1080, 300));
@@ -1926,7 +2013,7 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
         jLabel7.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
         jLabel7.setForeground(new java.awt.Color(40, 55, 80));
         jLabel7.setText("Invoice Number");
-        pnlFilters.add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(760, 50, -1, -1));
+        pnlFilters.add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(890, 50, -1, -1));
 
         jLabel8.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
         jLabel8.setForeground(new java.awt.Color(40, 55, 80));
@@ -1940,16 +2027,24 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
 
         jLabel10.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
         jLabel10.setForeground(new java.awt.Color(40, 55, 80));
-        jLabel10.setText("Cashier");
-        pnlFilters.add(jLabel10, new org.netbeans.lib.awtextra.AbsoluteConstraints(470, 50, -1, -1));
+        jLabel10.setText("Product Name:");
+        pnlFilters.add(jLabel10, new org.netbeans.lib.awtextra.AbsoluteConstraints(690, 50, -1, -1));
         pnlFilters.add(dateFrom, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 70, 160, 30));
         pnlFilters.add(dateTo, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 70, 160, 30));
 
         listOfCashiers.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        pnlFilters.add(listOfCashiers, new org.netbeans.lib.awtextra.AbsoluteConstraints(470, 70, 230, 30));
+        pnlFilters.add(listOfCashiers, new org.netbeans.lib.awtextra.AbsoluteConstraints(470, 70, 170, 30));
 
         searchInvoiceNumber.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        pnlFilters.add(searchInvoiceNumber, new org.netbeans.lib.awtextra.AbsoluteConstraints(760, 70, 190, 30));
+        pnlFilters.add(searchInvoiceNumber, new org.netbeans.lib.awtextra.AbsoluteConstraints(890, 70, 170, 30));
+
+        jLabel12.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        jLabel12.setForeground(new java.awt.Color(40, 55, 80));
+        jLabel12.setText("Cashier");
+        pnlFilters.add(jLabel12, new org.netbeans.lib.awtextra.AbsoluteConstraints(470, 50, -1, -1));
+
+        cmbProductName.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        pnlFilters.add(cmbProductName, new org.netbeans.lib.awtextra.AbsoluteConstraints(690, 70, 160, 30));
 
         jPanel2.add(pnlFilters, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 1080, 130));
 
@@ -1974,11 +2069,13 @@ public class SalesHistoryPanel extends javax.swing.JPanel {
     private javax.swing.JButton btnExportToExcel;
     private javax.swing.JButton btnExportToPDF;
     private javax.swing.JButton btnRefresh;
+    private javax.swing.JComboBox<String> cmbProductName;
     private com.toedter.calendar.JDateChooser dateFrom;
     private com.toedter.calendar.JDateChooser dateTo;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
+    private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;

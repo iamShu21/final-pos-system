@@ -151,7 +151,7 @@ public class ReportsPanel extends javax.swing.JPanel {
         lblCurrentReportTitle.setText("Daily Sales Report");
         resetTable();
 
-        model.setColumnIdentifiers(new String[]{"Date", "Category", "Sales", "Quantity", "Status"});
+        model.setColumnIdentifiers(new String[]{"Date", "Category", "Sales", "VAT", "Quantity", "Status"});
         enhanceTable(tblReports, scrollReportsTable);
 
         String selectedCategory = getSelectedCategory();
@@ -162,6 +162,7 @@ public class ReportsPanel extends javax.swing.JPanel {
         sql.append("SELECT DATE(s.sale_date) AS report_date, ");
         sql.append("c.name AS category_name, ");
         sql.append("SUM(sd.subtotal) AS total_sales, ");
+        sql.append("SUM(s.vat) AS total_vat, ");
         sql.append("SUM(sd.quantity) AS total_quantity, ");
         sql.append("s.status ");
         sql.append("FROM sales s ");
@@ -202,7 +203,8 @@ public class ReportsPanel extends javax.swing.JPanel {
                     model.addRow(new Object[]{
                         rs.getString("report_date"),
                         rs.getString("category_name"),
-                        rs.getDouble("total_sales"),
+                        tablePesoFormat.format(rs.getDouble("total_sales")),
+                        tablePesoFormat.format(rs.getDouble("total_vat")),
                         rs.getInt("total_quantity"),
                         rs.getString("status")
                     });
@@ -950,7 +952,7 @@ public class ReportsPanel extends javax.swing.JPanel {
         lblCurrentReportTitle.setText("Monthly Sales Report");
         resetTable();
 
-        model.setColumnIdentifiers(new String[]{"Month", "Category", "Sales", "Quantity", "Status"});
+        model.setColumnIdentifiers(new String[]{"Month", "Category", "Sales", "VAT", "Quantity", "Status"});
         enhanceTable(tblReports, scrollReportsTable);
 
         String selectedCategory = getSelectedCategory();
@@ -961,6 +963,7 @@ public class ReportsPanel extends javax.swing.JPanel {
         sql.append("SELECT DATE_FORMAT(s.sale_date, '%Y-%m') AS report_month, ");
         sql.append("c.name AS category_name, ");
         sql.append("SUM(sd.subtotal) AS total_sales, ");
+        sql.append("SUM(s.vat) AS total_vat, ");
         sql.append("SUM(sd.quantity) AS total_quantity, ");
         sql.append("s.status ");
         sql.append("FROM sales s ");
@@ -1001,7 +1004,8 @@ public class ReportsPanel extends javax.swing.JPanel {
                     model.addRow(new Object[]{
                         rs.getString("report_month"),
                         rs.getString("category_name"),
-                        rs.getDouble("total_sales"),
+                        tablePesoFormat.format(rs.getDouble("total_sales")),
+                        tablePesoFormat.format(rs.getDouble("total_vat")),
                         rs.getInt("total_quantity"),
                         rs.getString("status")
                     });

@@ -150,7 +150,7 @@ public class Login extends javax.swing.JFrame {
             return;
         }
 
-        String sql = "SELECT user_id, username, role, password FROM users WHERE username = ? LIMIT 1";
+        String sql = "SELECT user_id, username, role, password, status FROM users WHERE username = ? LIMIT 1";
 
         try (Connection conn = DBConnection.dbConnection(); PreparedStatement pst = conn.prepareStatement(sql)) {
 
@@ -168,6 +168,15 @@ public class Login extends javax.swing.JFrame {
                     }
 
                     if (passwordMatches) {
+                        // Check if user is active
+                        String userStatus = rs.getString("status");
+                        if (!"Active".equalsIgnoreCase(userStatus)) {
+                            JOptionPane.showMessageDialog(this, "This account is inactive. Please contact administrator.");
+                            txtPassword.setText("");
+                            txtPassword.requestFocus();
+                            return;
+                        }
+
                         new MainFrame(
                                 rs.getInt("user_id"),
                                 rs.getString("username"),

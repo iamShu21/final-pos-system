@@ -120,7 +120,7 @@ public class ProductsManagementPanel extends javax.swing.JPanel {
         applyTableFilters();
         initializeSearchListener();
 
-        barcode.setEditable(false);
+        // barcode field is editable to allow barcode scanner input
         setupImagePreviewPlaceholder();
 
     }

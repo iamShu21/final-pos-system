@@ -102,6 +102,8 @@ import javax.swing.text.DocumentFilter;
 import org.mindrot.jbcrypt.BCrypt;
 
 public class POSControllerPanel extends javax.swing.JPanel {
+    
+    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(POSControllerPanel.class.getName());
 
     private Timer dateTimeTimer;
     private String loggedInName;
@@ -128,6 +130,7 @@ public class POSControllerPanel extends javax.swing.JPanel {
     private Timer searchDelay;
 
     public POSControllerPanel(int loggedInUserId, String loggedInName, String loggedInRole) {
+        
         this.loggedInUserId = loggedInUserId;
         this.loggedInName = loggedInName;
         this.loggedInRole = loggedInRole;
@@ -231,6 +234,20 @@ public class POSControllerPanel extends javax.swing.JPanel {
         barcodeInput.addKeyListener(new java.awt.event.KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
+                // Handle Enter key both when popup is visible and when it's not visible (for barcode scanner)
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    if (productSuggestionPopup.isVisible()) {
+                        // Popup visible: select suggested product
+                        selectSuggestedProduct();
+                    } else {
+                        // Popup not visible: direct barcode lookup (scanner scenario)
+                        handleAddToCartByBarcode();
+                    }
+                    e.consume();
+                    return;
+                }
+
+                // Other key handling only works when popup is visible
                 if (!productSuggestionPopup.isVisible()) {
                     return;
                 }
@@ -248,9 +265,6 @@ public class POSControllerPanel extends javax.swing.JPanel {
                         suggestionList.setSelectedIndex(index - 1);
                         suggestionList.ensureIndexIsVisible(index - 1);
                     }
-                    e.consume();
-                } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    selectSuggestedProduct();
                     e.consume();
                 } else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
                     productSuggestionPopup.setVisible(false);
@@ -1331,7 +1345,18 @@ public class POSControllerPanel extends javax.swing.JPanel {
             return;
         }
 
-        showAddToCartDialog(product);
+        // For barcode scanning, add/merge directly without dialog (quantity 1, discount 0)
+        addOrMergeCartItem(
+                product.productId,
+                product.productName,
+                1,  // quantity
+                product.sellingPrice,
+                0.0,  // discount
+                product.stockQuantity
+        );
+
+        barcodeInput.setText("");
+        barcodeInput.requestFocus();
     }
 
     private List<ProductData> findProductsByBarcodeOrName(String keyword) {
@@ -1805,6 +1830,23 @@ public class POSControllerPanel extends javax.swing.JPanel {
         return "Cashier".equalsIgnoreCase(loggedInRole);
     }
 
+    private boolean isUserActive() {
+        String sql = "SELECT status FROM users WHERE user_id = ? LIMIT 1";
+        try (Connection conn = DBConnection.dbConnection();
+             PreparedStatement pst = conn.prepareStatement(sql)) {
+            pst.setInt(1, loggedInUserId);
+            try (ResultSet rs = pst.executeQuery()) {
+                if (rs.next()) {
+                    String status = rs.getString("status");
+                    return "Active".equalsIgnoreCase(status);
+                }
+            }
+        } catch (SQLException ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Error checking user status", ex);
+        }
+        return false; // Default to inactive if error occurs
+    }
+
     private boolean requestDiscountApproval(JDialog parentDialog, String productName, double discountAmount) {
         final boolean[] approved = {false};
         JDialog approvalDialog = new JDialog(parentDialog, "Discount Approval", true);
@@ -2158,14 +2200,30 @@ public class POSControllerPanel extends javax.swing.JPanel {
             return false;
         }
 
-        if (tendered < total) {
-            JOptionPane.showMessageDialog(this,
-                    paymentMethod + " payment amount is insufficient.",
-                    "Insufficient Payment",
-                    JOptionPane.WARNING_MESSAGE);
-            cashTendered.requestFocus();
-            cashTendered.selectAll();
-            return false;
+        // Different validation rules based on payment method
+        if ("Cash".equalsIgnoreCase(paymentMethod)) {
+            // Cash: allow overpayment (tendered >= total)
+            if (tendered < total) {
+                JOptionPane.showMessageDialog(this,
+                        "Insufficient cash tendered.",
+                        "Insufficient Payment",
+                        JOptionPane.WARNING_MESSAGE);
+                cashTendered.requestFocus();
+                cashTendered.selectAll();
+                return false;
+            }
+        } else if ("GCash".equalsIgnoreCase(paymentMethod) || "Card".equalsIgnoreCase(paymentMethod)) {
+            // GCash/E-Wallet and Card: require exact payment (tendered == total)
+            if (tendered != total) {
+                String methodName = "GCash".equalsIgnoreCase(paymentMethod) ? "GCash/E-Wallet" : "Card";
+                JOptionPane.showMessageDialog(this,
+                        "Amount must exactly match total for " + methodName + " payment.",
+                        "Exact Payment Required",
+                        JOptionPane.WARNING_MESSAGE);
+                cashTendered.requestFocus();
+                cashTendered.selectAll();
+                return false;
+            }
         }
 
         return true;

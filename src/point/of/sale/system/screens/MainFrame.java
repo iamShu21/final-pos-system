@@ -42,10 +42,24 @@ public class MainFrame extends javax.swing.JFrame {
 
         setLoggedInUserInfo();
         loadPanels();
-        showPanel("dashboard");
+        
+        // Inventory Clerk lands on Inventory, others land on Dashboard
+        if (isInventoryClerk()) {
+            showPanel("inventories");
+        } else {
+            showPanel("dashboard");
+        }
+        
         startDateTimeTimer();
         setupSidebarHoverEffects();
-        setActiveNav(navDashboard);
+        
+        // Set active nav based on role
+        if (isInventoryClerk()) {
+            setActiveNav(navInventory);
+        } else {
+            setActiveNav(navDashboard);
+        }
+        
         applyRBACVisibility();
     }
 
@@ -67,19 +81,19 @@ public class MainFrame extends javax.swing.JFrame {
     }
 
     private boolean canManageUsers() {
-        return isSuperAdmin() || isManager();
+        return isSuperAdmin();
     }
 
     private boolean canManageCategories() {
-        return isSuperAdmin() || isManager() || isInventoryClerk();
+        return isSuperAdmin() || isManager();
     }
 
     private boolean canManageSuppliers() {
-        return isSuperAdmin() || isManager() || isInventoryClerk();
+        return isSuperAdmin() || isManager();
     }
 
     private boolean canManageProducts() {
-        return isSuperAdmin() || isManager() || isInventoryClerk();
+        return isSuperAdmin() || isManager();
     }
 
     private boolean canManageInventory() {
@@ -125,6 +139,43 @@ public class MainFrame extends javax.swing.JFrame {
 
         // Reports: Super Admin, Manager
         navReports.setVisible(canViewReports());
+        
+        // Reposition visible sidebar items to eliminate gaps
+        repositionSidebarItems();
+    }
+
+    private void repositionSidebarItems() {
+        // Define the logical order of navigation items (top to bottom)
+        javax.swing.JPanel[] navItems = {
+            navDashboard, navCategories, navSuppliers, navProducts, 
+            navInventory, navPOS, navSalesHistory, navReports
+        };
+        
+        int currentY = 10; // Starting Y position
+        int itemHeight = 60;
+        int itemWidth = 280;
+        int gap = 10;
+        
+        // Remove all nav items first
+        for (javax.swing.JPanel navItem : navItems) {
+            menuPanel.remove(navItem);
+        }
+        menuPanel.remove(navUsers);
+        
+        // Reposition visible items from top to bottom
+        for (javax.swing.JPanel navItem : navItems) {
+            if (navItem.isVisible()) {
+                menuPanel.add(navItem, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, currentY, itemWidth, itemHeight));
+                currentY += itemHeight + gap;
+            }
+        }
+        
+        // Add navUsers at fixed bottom position (before user info panel)
+        menuPanel.add(navUsers, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 570, itemWidth, itemHeight));
+        
+        // Force re-layout
+        menuPanel.revalidate();
+        menuPanel.repaint();
     }
 
     private void setLoggedInUserInfo() {
@@ -552,7 +603,7 @@ public class MainFrame extends javax.swing.JFrame {
         lblAutomatedUserRole.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         lblAutomatedUserRole.setForeground(new java.awt.Color(255, 255, 255));
         lblAutomatedUserRole.setText("Userrole");
-        userInfoPanel.add(lblAutomatedUserRole, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 30, 90, -1));
+        userInfoPanel.add(lblAutomatedUserRole, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 30, 200, -1));
         userInfoPanel.add(jSeparator3, new org.netbeans.lib.awtextra.AbsoluteConstraints(-20, 0, 340, 20));
 
         menuPanel.add(userInfoPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 710, 300, 60));

@@ -71,8 +71,6 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
     private JLabel lblLowStockCount;
     private JLabel lblLowStockMessage;
 
-    private static final Pattern PO_PATTERN = Pattern.compile("^PO-(\\d+)$");
-
     public InventoryManagementPanel() {
         initComponents();
 
@@ -80,7 +78,7 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         applyColdThemeStyling();
         createLowStockCard();
         loadAllInventoryData();
-        generateNextReferenceNumber();
+        generateNextStockInReferenceNumber();
     }
 
     private void initializeForm() {
@@ -129,24 +127,30 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         hookRefreshButton();
 
         enhanceTable(table, jScrollPane3);
-        
+
         jLabel16.setForeground(new Color(88, 105, 136));
     }
 
     private void stylePanelLikeProducts(JPanel panel) {
-        if (panel == null) return;
+        if (panel == null) {
+            return;
+        }
         panel.setOpaque(false);
         panel.setBorder(BorderFactory.createEmptyBorder());
     }
 
     private void styleHeaderBar(JPanel panel) {
-        if (panel == null) return;
+        if (panel == null) {
+            return;
+        }
         panel.setOpaque(false);
         panel.setBorder(BorderFactory.createEmptyBorder());
     }
 
     private void styleTextField(JTextField field) {
-        if (field == null) return;
+        if (field == null) {
+            return;
+        }
 
         field.setFont(new Font("Tahoma", Font.PLAIN, 13));
         field.setBackground(Color.WHITE);
@@ -160,7 +164,9 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
     }
 
     private void styleTextArea(JTextArea area) {
-        if (area == null) return;
+        if (area == null) {
+            return;
+        }
 
         area.setFont(new Font("Tahoma", Font.PLAIN, 13));
         area.setBackground(Color.WHITE);
@@ -175,7 +181,9 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
     }
 
     private void styleComboBox(JComboBox<?> combo) {
-        if (combo == null) return;
+        if (combo == null) {
+            return;
+        }
 
         combo.setFont(new Font("Tahoma", Font.PLAIN, 13));
         combo.setBackground(Color.WHITE);
@@ -188,7 +196,9 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
     }
 
     private void styleButton(JButton button, Color baseColor) {
-        if (button == null) return;
+        if (button == null) {
+            return;
+        }
 
         Color hoverColor = new Color(
                 Math.min(baseColor.getRed() + 15, 255),
@@ -224,28 +234,36 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         button.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                if (!button.isEnabled()) return;
+                if (!button.isEnabled()) {
+                    return;
+                }
                 button.putClientProperty("btnColor", hoverColor);
                 button.repaint();
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                if (!button.isEnabled()) return;
+                if (!button.isEnabled()) {
+                    return;
+                }
                 button.putClientProperty("btnColor", baseColor);
                 button.repaint();
             }
 
             @Override
             public void mousePressed(MouseEvent e) {
-                if (!button.isEnabled()) return;
+                if (!button.isEnabled()) {
+                    return;
+                }
                 button.putClientProperty("btnColor", pressColor);
                 button.repaint();
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                if (!button.isEnabled()) return;
+                if (!button.isEnabled()) {
+                    return;
+                }
                 button.putClientProperty("btnColor", hoverColor);
                 button.repaint();
             }
@@ -266,7 +284,9 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
     }
 
     private void installRoundedButtonPainter(JButton button) {
-        if (button == null) return;
+        if (button == null) {
+            return;
+        }
 
         button.setUI(new BasicButtonUI() {
             @Override
@@ -281,12 +301,18 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
                 if (!b.isEnabled()) {
                     bg = (Color) b.getClientProperty("btnDisabledBg");
                     fg = (Color) b.getClientProperty("btnDisabledFg");
-                    if (bg == null) bg = new Color(189, 198, 214);
-                    if (fg == null) fg = new Color(114, 126, 145);
+                    if (bg == null) {
+                        bg = new Color(189, 198, 214);
+                    }
+                    if (fg == null) {
+                        fg = new Color(114, 126, 145);
+                    }
                 } else {
                     bg = (Color) b.getClientProperty("btnColor");
                     fg = b.getForeground();
-                    if (bg == null) bg = b.getBackground();
+                    if (bg == null) {
+                        bg = b.getBackground();
+                    }
                 }
 
                 g2.setColor(bg);
@@ -357,7 +383,7 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         table.setDefaultEditor(Object.class, null);
         table.setRowHeight(38);
 
-        table.getColumnModel().getColumn(4).setCellRenderer(new DefaultTableCellRenderer() {
+        table.getColumnModel().getColumn(5).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(
                     JTable tbl, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -400,217 +426,218 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         });
     }
 
-   private void enhanceTable(JTable table, JScrollPane scrollPane) {
-    Font bodyFont = new Font("Tahoma", Font.PLAIN, 13);
-    Font headerFont = new Font("Tahoma", Font.BOLD, 13);
+    private void enhanceTable(JTable table, JScrollPane scrollPane) {
+        Font bodyFont = new Font("Tahoma", Font.PLAIN, 13);
+        Font headerFont = new Font("Tahoma", Font.BOLD, 13);
 
-    Color panelBg = new Color(241, 247, 253);
-    Color cardBg = new Color(250, 253, 255);
-    Color tableBg = new Color(255, 255, 255);
-    Color stripeBg = new Color(246, 250, 254);
-    Color hoverBg = new Color(235, 244, 255);
-    Color headerBg = new Color(40, 56, 145);
-    Color headerFg = Color.WHITE;
-    Color textColor = new Color(32, 48, 70);
-    Color mutedGrid = new Color(225, 234, 244);
-    Color selectBg = new Color(214, 231, 250);
-    Color selectFg = new Color(20, 43, 67);
+        Color panelBg = new Color(241, 247, 253);
+        Color cardBg = new Color(250, 253, 255);
+        Color tableBg = new Color(255, 255, 255);
+        Color stripeBg = new Color(246, 250, 254);
+        Color hoverBg = new Color(235, 244, 255);
+        Color headerBg = new Color(40, 56, 145);
+        Color headerFg = Color.WHITE;
+        Color textColor = new Color(32, 48, 70);
+        Color mutedGrid = new Color(225, 234, 244);
+        Color selectBg = new Color(214, 231, 250);
+        Color selectFg = new Color(20, 43, 67);
 
-    scrollPane.setBorder(BorderFactory.createEmptyBorder());
-    scrollPane.setOpaque(false);
-    scrollPane.setBackground(panelBg);
-    scrollPane.getViewport().setOpaque(false);
-    scrollPane.getViewport().setBackground(cardBg);
-    scrollPane.setViewportBorder(null);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setOpaque(false);
+        scrollPane.setBackground(panelBg);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.getViewport().setBackground(cardBg);
+        scrollPane.setViewportBorder(null);
 
-    table.setFont(bodyFont);
-    table.setRowHeight(38);
-    table.setShowGrid(true);
-    table.setGridColor(mutedGrid);
-    table.setIntercellSpacing(new Dimension(0, 1));
-    table.setFocusable(false);
-    table.setBackground(tableBg);
-    table.setForeground(textColor);
-    table.setSelectionBackground(selectBg);
-    table.setSelectionForeground(selectFg);
-    table.setBorder(BorderFactory.createEmptyBorder());
-    table.setFillsViewportHeight(true);
+        table.setFont(bodyFont);
+        table.setRowHeight(38);
+        table.setShowGrid(true);
+        table.setGridColor(mutedGrid);
+        table.setIntercellSpacing(new Dimension(0, 1));
+        table.setFocusable(false);
+        table.setBackground(tableBg);
+        table.setForeground(textColor);
+        table.setSelectionBackground(selectBg);
+        table.setSelectionForeground(selectFg);
+        table.setBorder(BorderFactory.createEmptyBorder());
+        table.setFillsViewportHeight(true);
 
-    JTableHeader header = table.getTableHeader();
-    header.setFont(headerFont);
-    header.setPreferredSize(new Dimension(header.getWidth(), 46));
-    header.setReorderingAllowed(false);
-    header.setOpaque(false);
+        JTableHeader header = table.getTableHeader();
+        header.setFont(headerFont);
+        header.setPreferredSize(new Dimension(header.getWidth(), 46));
+        header.setReorderingAllowed(false);
+        header.setOpaque(false);
 
-    header.setDefaultRenderer(new DefaultTableCellRenderer() {
-        @Override
-        public Component getTableCellRendererComponent(
-                JTable table, Object value, boolean isSelected,
-                boolean hasFocus, int row, int column) {
+        header.setDefaultRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(
+                    JTable table, Object value, boolean isSelected,
+                    boolean hasFocus, int row, int column) {
 
-            JLabel label = new JLabel(value == null ? "" : value.toString());
-            label.setOpaque(true);
-            label.setBackground(headerBg);
-            label.setForeground(headerFg);
-            label.setFont(headerFont);
-            label.setHorizontalAlignment(SwingConstants.CENTER);
-            label.setBorder(new EmptyBorder(10, 10, 10, 10));
-            return label;
-        }
-    });
-
-    DefaultTableCellRenderer renderer = new DefaultTableCellRenderer() {
-        @Override
-        public Component getTableCellRendererComponent(
-                JTable table, Object value, boolean isSelected,
-                boolean hasFocus, int row, int column) {
-
-            JLabel label = (JLabel) super.getTableCellRendererComponent(
-                    table, value, isSelected, hasFocus, row, column);
-
-            label.setHorizontalAlignment(SwingConstants.CENTER);
-            label.setBorder(new EmptyBorder(8, 12, 8, 12));
-            label.setFont(bodyFont);
-
-            if (isSelected) {
-                label.setBackground(selectBg);
-                label.setForeground(selectFg);
-            } else if (row == hoveredTableRow) {
-                label.setBackground(hoverBg);
-                label.setForeground(textColor);
-            } else {
-                label.setBackground(row % 2 == 0 ? tableBg : stripeBg);
-                label.setForeground(textColor);
+                JLabel label = new JLabel(value == null ? "" : value.toString());
+                label.setOpaque(true);
+                label.setBackground(headerBg);
+                label.setForeground(headerFg);
+                label.setFont(headerFont);
+                label.setHorizontalAlignment(SwingConstants.CENTER);
+                label.setBorder(new EmptyBorder(10, 10, 10, 10));
+                return label;
             }
+        });
 
-            return label;
+        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(
+                    JTable table, Object value, boolean isSelected,
+                    boolean hasFocus, int row, int column) {
+
+                JLabel label = (JLabel) super.getTableCellRendererComponent(
+                        table, value, isSelected, hasFocus, row, column);
+
+                label.setHorizontalAlignment(SwingConstants.CENTER);
+                label.setBorder(new EmptyBorder(8, 12, 8, 12));
+                label.setFont(bodyFont);
+
+                if (isSelected) {
+                    label.setBackground(selectBg);
+                    label.setForeground(selectFg);
+                } else if (row == hoveredTableRow) {
+                    label.setBackground(hoverBg);
+                    label.setForeground(textColor);
+                } else {
+                    label.setBackground(row % 2 == 0 ? tableBg : stripeBg);
+                    label.setForeground(textColor);
+                }
+
+                return label;
+            }
+        };
+
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            if (i != 5) {
+                table.getColumnModel().getColumn(i).setCellRenderer(renderer);
+            }
         }
-    };
 
-    for (int i = 0; i < table.getColumnCount(); i++) {
-        if (i != 4) {
-            table.getColumnModel().getColumn(i).setCellRenderer(renderer);
-        }
-    }
+        table.getColumnModel().getColumn(0).setPreferredWidth(220); // Product Name
+        table.getColumnModel().getColumn(1).setPreferredWidth(180); // Category
+        table.getColumnModel().getColumn(2).setPreferredWidth(130); // Current Stock
+        table.getColumnModel().getColumn(3).setPreferredWidth(130); // Reorder Level
+        table.getColumnModel().getColumn(4).setPreferredWidth(180); // Reference No.
+        table.getColumnModel().getColumn(5).setPreferredWidth(160); // Status
 
-    table.getColumnModel().getColumn(0).setPreferredWidth(220); // Product Name
-    table.getColumnModel().getColumn(1).setPreferredWidth(180); // Category
-    table.getColumnModel().getColumn(2).setPreferredWidth(130); // Current Stock
-    table.getColumnModel().getColumn(3).setPreferredWidth(130); // Reorder Level
-    table.getColumnModel().getColumn(4).setPreferredWidth(180); // Status
+        scrollPane.setVerticalScrollBar(new ModernScrollBar());
+        scrollPane.setHorizontalScrollBar(new ModernScrollBar());
 
-    scrollPane.setVerticalScrollBar(new ModernScrollBar());
-    scrollPane.setHorizontalScrollBar(new ModernScrollBar());
+        wrapScrollPaneInCard(scrollPane);
 
-    wrapScrollPaneInCard(scrollPane);
+        table.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                int row = table.rowAtPoint(e.getPoint());
+                if (row != hoveredTableRow) {
+                    hoveredTableRow = row;
+                    table.repaint();
+                }
+            }
+        });
 
-    table.addMouseMotionListener(new MouseMotionAdapter() {
-        @Override
-        public void mouseMoved(MouseEvent e) {
-            int row = table.rowAtPoint(e.getPoint());
-            if (row != hoveredTableRow) {
-                hoveredTableRow = row;
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseExited(MouseEvent e) {
+                hoveredTableRow = -1;
                 table.repaint();
             }
-        }
-    });
+        });
+    }
 
-    table.addMouseListener(new MouseAdapter() {
+    private void wrapScrollPaneInCard(JScrollPane scrollPane) {
+        Container parent = scrollPane.getParent();
+        if (parent instanceof JViewport) {
+            parent = parent.getParent();
+        }
+
+        if (parent != null) {
+            parent.setLayout(new BorderLayout());
+            parent.remove(scrollPane);
+
+            JPanel roundedWrapper = new ShadowPanel();
+            roundedWrapper.setLayout(new BorderLayout());
+            roundedWrapper.setBorder(new EmptyBorder(14, 14, 14, 14));
+            roundedWrapper.add(scrollPane, BorderLayout.CENTER);
+
+            parent.add(roundedWrapper, BorderLayout.CENTER);
+            parent.revalidate();
+            parent.repaint();
+        }
+    }
+
+    public static class ShadowPanel extends JPanel {
+
+        public ShadowPanel() {
+            setOpaque(false);
+            setBackground(new Color(250, 253, 255));
+        }
+
         @Override
-        public void mouseExited(MouseEvent e) {
-            hoveredTableRow = -1;
-            table.repaint();
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            int width = getWidth();
+            int height = getHeight();
+
+            g2.setColor(new Color(0, 0, 0, 20));
+            g2.fillRoundRect(6, 6, width - 12, height - 12, 24, 24);
+
+            g2.setColor(getBackground());
+            g2.fillRoundRect(0, 0, width - 12, height - 12, 24, 24);
+
+            g2.dispose();
+            super.paintComponent(g);
         }
-    });
-}
-
-   private void wrapScrollPaneInCard(JScrollPane scrollPane) {
-    Container parent = scrollPane.getParent();
-    if (parent instanceof JViewport) {
-        parent = parent.getParent();
     }
 
-    if (parent != null) {
-        parent.setLayout(new BorderLayout());
-        parent.remove(scrollPane);
+    private void createLowStockCard() {
+        if (pnlAlert == null) {
+            return;
+        }
 
-        JPanel roundedWrapper = new ShadowPanel();
-        roundedWrapper.setLayout(new BorderLayout());
-        roundedWrapper.setBorder(new EmptyBorder(14, 14, 14, 14));
-        roundedWrapper.add(scrollPane, BorderLayout.CENTER);
+        pnlAlert.removeAll();
+        pnlAlert.setLayout(new BorderLayout());
+        pnlAlert.setOpaque(false);
+        pnlAlert.setBorder(BorderFactory.createEmptyBorder());
 
-        parent.add(roundedWrapper, BorderLayout.CENTER);
-        parent.revalidate();
-        parent.repaint();
+        lowStockCard = new AlertCardPanel();
+        lowStockCard.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        lowStockCard.setOpaque(false);
+
+        lblLowStockTitle = new JLabel("LOW STOCK ALERT");
+        lblLowStockTitle.setFont(new Font("Tahoma", Font.BOLD, 16));
+        lblLowStockTitle.setForeground(new Color(26, 98, 46));
+
+        lblLowStockCount = new JLabel("0");
+        lblLowStockCount.setFont(new Font("Tahoma", Font.BOLD, 26));
+        lblLowStockCount.setForeground(new Color(26, 98, 46));
+
+        lblLowStockMessage = new JLabel("All monitored products are in good stock.");
+        lblLowStockMessage.setFont(new Font("Tahoma", Font.PLAIN, 12));
+        lblLowStockMessage.setForeground(new Color(55, 95, 60));
+
+        lowStockCard.add(lblLowStockTitle, new org.netbeans.lib.awtextra.AbsoluteConstraints(18, 14, 200, 22));
+        lowStockCard.add(lblLowStockCount, new org.netbeans.lib.awtextra.AbsoluteConstraints(18, 42, 70, 32));
+        lowStockCard.add(lblLowStockMessage, new org.netbeans.lib.awtextra.AbsoluteConstraints(18, 82, 240, 20));
+
+        pnlAlert.add(lowStockCard, BorderLayout.CENTER);
+
+        pnlAlert.revalidate();
+        pnlAlert.repaint();
     }
-}
-   public static class ShadowPanel extends JPanel {
-    public ShadowPanel() {
-        setOpaque(false);
-        setBackground(new Color(250, 253, 255));
-    }
-
-    @Override
-    protected void paintComponent(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g.create();
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-        int width = getWidth();
-        int height = getHeight();
-
-        g2.setColor(new Color(0, 0, 0, 20));
-        g2.fillRoundRect(6, 6, width - 12, height - 12, 24, 24);
-
-        g2.setColor(getBackground());
-        g2.fillRoundRect(0, 0, width - 12, height - 12, 24, 24);
-
-        g2.dispose();
-        super.paintComponent(g);
-    }
-}
-
-  private void createLowStockCard() {
-    if (pnlAlert == null) {
-        return;
-    }
-
-    pnlAlert.removeAll();
-    pnlAlert.setLayout(new BorderLayout());
-    pnlAlert.setOpaque(false);
-    pnlAlert.setBorder(BorderFactory.createEmptyBorder());
-
-    lowStockCard = new AlertCardPanel();
-    lowStockCard.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-    lowStockCard.setOpaque(false);
-
-    lblLowStockTitle = new JLabel("LOW STOCK ALERT");
-    lblLowStockTitle.setFont(new Font("Tahoma", Font.BOLD, 16));
-    lblLowStockTitle.setForeground(new Color(26, 98, 46));
-
-    lblLowStockCount = new JLabel("0");
-    lblLowStockCount.setFont(new Font("Tahoma", Font.BOLD, 26));
-    lblLowStockCount.setForeground(new Color(26, 98, 46));
-
-    lblLowStockMessage = new JLabel("All monitored products are in good stock.");
-    lblLowStockMessage.setFont(new Font("Tahoma", Font.PLAIN, 12));
-    lblLowStockMessage.setForeground(new Color(55, 95, 60));
-
-    lowStockCard.add(lblLowStockTitle, new org.netbeans.lib.awtextra.AbsoluteConstraints(18, 14, 200, 22));
-    lowStockCard.add(lblLowStockCount, new org.netbeans.lib.awtextra.AbsoluteConstraints(18, 42, 70, 32));
-    lowStockCard.add(lblLowStockMessage, new org.netbeans.lib.awtextra.AbsoluteConstraints(18, 82, 240, 20));
-
-    pnlAlert.add(lowStockCard, BorderLayout.CENTER);
-
-    pnlAlert.revalidate();
-    pnlAlert.repaint();
-}
 
     private void updateLowStockCard() {
         String sql = "SELECT COUNT(*) AS low_stock_count FROM products WHERE stock_quantity <= reorder_level";
 
-        try (Connection con = DBConnection.dbConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (Connection con = DBConnection.dbConnection(); PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
             int count = 0;
             if (rs.next()) {
@@ -656,9 +683,7 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
 
         String sql = "SELECT product_id, name FROM products ORDER BY name ASC";
 
-        try (Connection con = DBConnection.dbConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (Connection con = DBConnection.dbConnection(); PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 int productId = rs.getInt("product_id");
@@ -686,9 +711,7 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
 
             String sql = "SELECT category_id, name FROM categories ORDER BY name ASC";
 
-            try (Connection con = DBConnection.dbConnection();
-                 PreparedStatement ps = con.prepareStatement(sql);
-                 ResultSet rs = ps.executeQuery()) {
+            try (Connection con = DBConnection.dbConnection(); PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
                 while (rs.next()) {
                     int id = rs.getInt("category_id");
@@ -710,7 +733,9 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
     }
 
     private void applyMonitoringFilters() {
-        if (suppressFilterEvents) return;
+        if (suppressFilterEvents) {
+            return;
+        }
 
         String keyword = txtSearch.getText().trim();
         String selectedCategory = cmbFilterCategory.getSelectedItem() == null
@@ -736,10 +761,16 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
 
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT p.name AS product_name, c.name AS category_name, ")
-           .append("p.stock_quantity, p.reorder_level ")
-           .append("FROM products p ")
-           .append("LEFT JOIN categories c ON p.category_id = c.category_id ")
-           .append("WHERE 1=1 ");
+                .append("p.stock_quantity, p.reorder_level, ")
+                .append("(SELECT it.reference_number ")
+                .append(" FROM inventory_transactions it ")
+                .append(" WHERE it.product_id = p.product_id ")
+                .append("   AND it.reference_number IS NOT NULL ")
+                .append(" ORDER BY it.transaction_id DESC ")
+                .append(" LIMIT 1) AS reference_number ")
+                .append("FROM products p ")
+                .append("LEFT JOIN categories c ON p.category_id = c.category_id ")
+                .append("WHERE 1=1 ");
 
         boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
         boolean hasCategory = categoryId != null;
@@ -754,8 +785,7 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
 
         sql.append("ORDER BY p.name ASC");
 
-        try (Connection con = DBConnection.dbConnection();
-             PreparedStatement ps = con.prepareStatement(sql.toString())) {
+        try (Connection con = DBConnection.dbConnection(); PreparedStatement ps = con.prepareStatement(sql.toString())) {
 
             int index = 1;
 
@@ -779,6 +809,7 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
                         rs.getString("category_name"),
                         currentStock,
                         reorderLevel,
+                        rs.getString("reference_number") == null ? "-" : rs.getString("reference_number"),
                         computeStockStatus(currentStock, reorderLevel)
                     });
                 }
@@ -822,8 +853,7 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
     private int getCurrentStock(int productId) throws SQLException {
         String sql = "SELECT stock_quantity FROM products WHERE product_id = ?";
 
-        try (Connection con = DBConnection.dbConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = DBConnection.dbConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, productId);
 
@@ -840,8 +870,7 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
     private int getReorderLevel(int productId) throws SQLException {
         String sql = "SELECT reorder_level FROM products WHERE product_id = ?";
 
-        try (Connection con = DBConnection.dbConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = DBConnection.dbConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, productId);
 
@@ -862,7 +891,7 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         txtQuantity.setText("");
         txtRemarks.setText("");
         setCurrentDates();
-        generateNextReferenceNumber();
+        generateNextStockInReferenceNumber();
     }
 
     private void clearStockOutForm() {
@@ -874,6 +903,7 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
             cmbReason.setSelectedIndex(0);
         }
         setCurrentDates();
+        generateNextStockOutReferenceNumber();
     }
 
     private void refreshInventoryModule() {
@@ -881,31 +911,26 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         clearStockInForm();
         clearStockOutForm();
         loadAllInventoryData();
-        generateNextReferenceNumber();
+        generateNextStockInReferenceNumber();
     }
 
-    private void generateNextReferenceNumber() {
-        String sql =
-                "SELECT reference_number " +
-                "FROM inventory_transactions " +
-                "WHERE reference_number IS NOT NULL " +
-                "ORDER BY transaction_id DESC";
+    private String generateNextReferenceNumber(String prefix) {
+        String sql = "SELECT reference_number FROM inventory_transactions WHERE reference_number IS NOT NULL ORDER BY transaction_id DESC";
 
         int maxNumber = 1000;
 
-        try (Connection con = DBConnection.dbConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (Connection con = DBConnection.dbConnection(); PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 String ref = rs.getString("reference_number");
-                if (ref == null) continue;
-
-                Matcher matcher = PO_PATTERN.matcher(ref.trim());
-                if (matcher.matches()) {
-                    int current = Integer.parseInt(matcher.group(1));
-                    if (current > maxNumber) {
-                        maxNumber = current;
+                if (ref != null) {
+                    Pattern pattern = Pattern.compile("^" + Pattern.quote(prefix) + "(\\d+)$");
+                    Matcher matcher = pattern.matcher(ref.trim());
+                    if (matcher.matches()) {
+                        int current = Integer.parseInt(matcher.group(1));
+                        if (current > maxNumber) {
+                            maxNumber = current;
+                        }
                     }
                 }
             }
@@ -914,21 +939,28 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
             JOptionPane.showMessageDialog(this, "Failed to generate reference number: " + ex.getMessage());
         }
 
-        txtReferenceNumber.setText("PO-" + (maxNumber + 1));
+        return prefix + (maxNumber + 1);
+    }
+
+    private void generateNextStockInReferenceNumber() {
+        txtReferenceNumber.setText(generateNextReferenceNumber("SI-"));
+    }
+
+    private void generateNextStockOutReferenceNumber() {
+        txtReferenceNumber.setText(generateNextReferenceNumber("SO-"));
     }
 
     private boolean isDuplicateStockInTransaction(int productId, int quantity, String referenceNumber, String dateText) {
-        String sql =
-                "SELECT COUNT(*) AS total " +
-                "FROM inventory_transactions " +
-                "WHERE product_id = ? " +
-                "AND transaction_type = 'Stock In' " +
-                "AND quantity = ? " +
-                "AND reference_number = ? " +
-                "AND transaction_date = ?";
+        String sql
+                = "SELECT COUNT(*) AS total "
+                + "FROM inventory_transactions "
+                + "WHERE product_id = ? "
+                + "AND transaction_type = 'Stock In' "
+                + "AND quantity = ? "
+                + "AND reference_number = ? "
+                + "AND transaction_date = ?";
 
-        try (Connection con = DBConnection.dbConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = DBConnection.dbConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, productId);
             ps.setInt(2, quantity);
@@ -949,17 +981,16 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
     }
 
     private boolean isDuplicateStockOutTransaction(int productId, int quantity, String reason, String dateText) {
-        String sql =
-                "SELECT COUNT(*) AS total " +
-                "FROM inventory_transactions " +
-                "WHERE product_id = ? " +
-                "AND transaction_type = 'Stock Out' " +
-                "AND quantity = ? " +
-                "AND reason = ? " +
-                "AND transaction_date = ?";
+        String sql
+                = "SELECT COUNT(*) AS total "
+                + "FROM inventory_transactions "
+                + "WHERE product_id = ? "
+                + "AND transaction_type = 'Stock Out' "
+                + "AND quantity = ? "
+                + "AND reason = ? "
+                + "AND transaction_date = ?";
 
-        try (Connection con = DBConnection.dbConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = DBConnection.dbConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, productId);
             ps.setInt(2, quantity);
@@ -982,7 +1013,7 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
     private void saveStockIn() {
         int productId = getSelectedStockInProductId();
         String quantityText = txtQuantity.getText().trim();
-        String referenceNumber = txtReferenceNumber.getText().trim();
+        String referenceNumber = generateNextReferenceNumber("SI-");
         String remarks = txtRemarks.getText().trim();
         String dateText = txtAutoGenerateDate.getText().trim();
 
@@ -996,11 +1027,6 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
             return;
         }
 
-        if (referenceNumber.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Reference number is required.");
-            return;
-        }
-
         int quantity = Integer.parseInt(quantityText);
 
         if (isDuplicateStockInTransaction(productId, quantity, referenceNumber, dateText)) {
@@ -1008,19 +1034,18 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
             return;
         }
 
-        String insertTransactionSql =
-                "INSERT INTO inventory_transactions "
+        String insertTransactionSql
+                = "INSERT INTO inventory_transactions "
                 + "(product_id, transaction_type, quantity, reference_number, transaction_date, reason, remarks) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-        String updateProductSql =
-                "UPDATE products SET stock_quantity = stock_quantity + ? WHERE product_id = ?";
+        String updateProductSql
+                = "UPDATE products SET stock_quantity = stock_quantity + ? WHERE product_id = ?";
 
         try (Connection con = DBConnection.dbConnection()) {
             con.setAutoCommit(false);
 
-            try (PreparedStatement psInsert = con.prepareStatement(insertTransactionSql);
-                 PreparedStatement psUpdate = con.prepareStatement(updateProductSql)) {
+            try (PreparedStatement psInsert = con.prepareStatement(insertTransactionSql); PreparedStatement psUpdate = con.prepareStatement(updateProductSql)) {
 
                 psInsert.setInt(1, productId);
                 psInsert.setString(2, "Stock In");
@@ -1058,6 +1083,12 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         String quantityText = StockOutQuantity.getText().trim();
         String reason = cmbReason.getSelectedItem() == null ? "" : cmbReason.getSelectedItem().toString();
         String dateText = dateAutoGenerated.getText().trim();
+        String referenceNumber = txtReferenceNumber.getText().trim();
+
+        if (referenceNumber.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Reference number is required.");
+            return;
+        }
 
         if (productId == -1) {
             JOptionPane.showMessageDialog(this, "Please select a product.");
@@ -1084,24 +1115,23 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
                 return;
             }
 
-            String insertTransactionSql =
-                    "INSERT INTO inventory_transactions "
+            String insertTransactionSql
+                    = "INSERT INTO inventory_transactions "
                     + "(product_id, transaction_type, quantity, reference_number, transaction_date, reason, remarks) "
                     + "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-            String updateProductSql =
-                    "UPDATE products SET stock_quantity = stock_quantity - ? WHERE product_id = ?";
+            String updateProductSql
+                    = "UPDATE products SET stock_quantity = stock_quantity - ? WHERE product_id = ?";
 
             try (Connection con = DBConnection.dbConnection()) {
                 con.setAutoCommit(false);
 
-                try (PreparedStatement psInsert = con.prepareStatement(insertTransactionSql);
-                     PreparedStatement psUpdate = con.prepareStatement(updateProductSql)) {
+                try (PreparedStatement psInsert = con.prepareStatement(insertTransactionSql); PreparedStatement psUpdate = con.prepareStatement(updateProductSql)) {
 
                     psInsert.setInt(1, productId);
                     psInsert.setString(2, "Stock Out");
                     psInsert.setInt(3, quantity);
-                    psInsert.setString(4, null);
+                    psInsert.setString(4, referenceNumber);
                     psInsert.setDate(5, Date.valueOf(LocalDate.parse(dateText)));
                     psInsert.setString(6, reason);
                     psInsert.setString(7, null);
@@ -1139,13 +1169,16 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error checking stock: " + ex.getMessage());
         }
-        
     }
+
     private static class IntegerOnlyFilter extends DocumentFilter {
+
         @Override
         public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr)
                 throws BadLocationException {
-            if (string == null) return;
+            if (string == null) {
+                return;
+            }
             if (string.matches("\\d+")) {
                 super.insertString(fb, offset, string, attr);
             }
@@ -1154,7 +1187,9 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         @Override
         public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs)
                 throws BadLocationException {
-            if (text == null) return;
+            if (text == null) {
+                return;
+            }
             if (text.isEmpty() || text.matches("\\d+")) {
                 super.replace(fb, offset, length, text, attrs);
             }
@@ -1162,6 +1197,7 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
     }
 
     public static class ModernScrollBar extends JScrollBar {
+
         public ModernScrollBar() {
             setUI(new BasicScrollBarUI() {
                 @Override
@@ -1199,7 +1235,9 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
 
                 @Override
                 protected void paintThumb(Graphics g, JComponent c, java.awt.Rectangle thumbBounds) {
-                    if (thumbBounds.isEmpty() || !scrollbar.isEnabled()) return;
+                    if (thumbBounds.isEmpty() || !scrollbar.isEnabled()) {
+                        return;
+                    }
 
                     Graphics2D g2 = (Graphics2D) g.create();
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -1225,6 +1263,7 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
     }
 
     public static class CleanTableCard extends JPanel {
+
         public CleanTableCard() {
             setOpaque(false);
             setBorder(BorderFactory.createEmptyBorder());
@@ -1253,9 +1292,37 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
     }
 
     public static class AlertCardPanel extends RoundedPanel {
-    public AlertCardPanel() {
-        setOpaque(false);
-        setBorder(BorderFactory.createEmptyBorder());
+
+        public AlertCardPanel() {
+            setOpaque(false);
+            setBorder(BorderFactory.createEmptyBorder());
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            int w = getWidth();
+            int h = getHeight();
+
+            Color top = new Color(234, 244, 225);
+            Color bottom = new Color(193, 217, 191);
+
+            g2.setColor(new Color(0, 0, 0, 18));
+            g2.fillRoundRect(3, 4, w - 6, h - 6, 24, 24);
+
+            GradientPaint gp = new GradientPaint(0, 0, top, 0, h, bottom);
+            g2.setPaint(gp);
+            g2.fillRoundRect(0, 0, w - 6, h - 6, 24, 24);
+
+            g2.setColor(new Color(221, 192, 74));
+            g2.setStroke(new BasicStroke(1.2f));
+            g2.drawRoundRect(0, 0, w - 7, h - 7, 24, 24);
+
+            g2.dispose();
+            super.paintComponent(g);
+        }
     }
 
     @Override
@@ -1283,34 +1350,6 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         g2.dispose();
         super.paintComponent(g);
     }
-}
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            int w = getWidth();
-            int h = getHeight();
-
-            Color top = new Color(234, 244, 225);
-            Color bottom = new Color(193, 217, 191);
-
-            g2.setColor(new Color(0, 0, 0, 18));
-            g2.fillRoundRect(3, 4, w - 6, h - 6, 24, 24);
-
-            GradientPaint gp = new GradientPaint(0, 0, top, 0, h, bottom);
-            g2.setPaint(gp);
-            g2.fillRoundRect(0, 0, w - 6, h - 6, 24, 24);
-
-            g2.setColor(new Color(221, 192, 74));
-            g2.setStroke(new BasicStroke(1.2f));
-            g2.drawRoundRect(0, 0, w - 7, h - 7, 24, 24);
-
-            g2.dispose();
-            super.paintComponent(g);
-        }
-
 
     /**
      *
@@ -1341,7 +1380,6 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         txtRemarks = new javax.swing.JTextArea();
         jPanel3 = new RoundedPanel();
         jLabel10 = new javax.swing.JLabel();
-        cmbStockOutProduct = new javax.swing.JComboBox<>();
         jLabel12 = new javax.swing.JLabel();
         cmbReason = new javax.swing.JComboBox<>();
         btnSaveStockOut = new javax.swing.JButton();
@@ -1349,6 +1387,9 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         jLabel13 = new javax.swing.JLabel();
         jLabel11 = new javax.swing.JLabel();
         StockOutQuantity = new javax.swing.JTextField();
+        stockoutRefNo = new javax.swing.JTextField();
+        jLabel18 = new javax.swing.JLabel();
+        cmbStockOutProduct = new javax.swing.JComboBox<>();
         jPanel4 = new RoundedPanel();
         jLabel3 = new javax.swing.JLabel("Add New User") {
             @Override
@@ -1471,11 +1512,11 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
 
             },
             new String [] {
-                "Product Name", "Category", "Current Stock", "Reorder Level", "Status"
+                "Product Name", "Category", "Current Stock", "Reorder Level", "Reference No.", "Status"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                true, false, false, false, true
+                false, false, false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -1495,6 +1536,8 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
             table.getColumnModel().getColumn(3).setPreferredWidth(130);
             table.getColumnModel().getColumn(4).setResizable(false);
             table.getColumnModel().getColumn(4).setPreferredWidth(200);
+            table.getColumnModel().getColumn(5).setResizable(false);
+            table.getColumnModel().getColumn(5).setPreferredWidth(180);
         }
 
         jPanel2.add(jScrollPane3, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 690, 540));
@@ -1547,16 +1590,16 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         btnSaveStockIn.setForeground(new java.awt.Color(255, 255, 255));
         btnSaveStockIn.setText("SAVE STOCK IN");
         btnSaveStockIn.addActionListener(this::btnSaveStockInActionPerformed);
-        jPanel1.add(btnSaveStockIn, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 340, 160, 30));
+        jPanel1.add(btnSaveStockIn, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 300, 160, 30));
 
         txtRemarks.setColumns(20);
         txtRemarks.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
         txtRemarks.setRows(5);
         jScrollPane2.setViewportView(txtRemarks);
 
-        jPanel1.add(jScrollPane2, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 210, 340, 120));
+        jPanel1.add(jScrollPane2, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 210, 340, 80));
 
-        add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 140, 380, 390));
+        add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 140, 380, 350));
 
         jPanel3.setBackground(new java.awt.Color(122, 170, 206));
         jPanel3.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -1566,41 +1609,47 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         jLabel10.setText("Select Product:");
         jPanel3.add(jLabel10, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 20, -1, -1));
 
-        cmbStockOutProduct.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
-        jPanel3.add(cmbStockOutProduct, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 40, 150, 40));
-
         jLabel12.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
         jLabel12.setForeground(new java.awt.Color(40, 55, 80));
         jLabel12.setText("Reason:");
         jPanel3.add(jLabel12, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 100, -1, -1));
 
         cmbReason.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
-        jPanel3.add(cmbReason, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 120, 150, 40));
+        jPanel3.add(cmbReason, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 120, 160, 40));
 
         btnSaveStockOut.setBackground(new java.awt.Color(0, 98, 193));
         btnSaveStockOut.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         btnSaveStockOut.setForeground(new java.awt.Color(255, 255, 255));
         btnSaveStockOut.setText("SAVE STOCK OUT");
         btnSaveStockOut.addActionListener(this::btnSaveStockOutActionPerformed);
-        jPanel3.add(btnSaveStockOut, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 180, 160, 30));
+        jPanel3.add(btnSaveStockOut, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 220, 160, 30));
 
         dateAutoGenerated.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
-        jPanel3.add(dateAutoGenerated, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 120, 150, 40));
+        jPanel3.add(dateAutoGenerated, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 120, 150, 40));
 
         jLabel13.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
         jLabel13.setForeground(new java.awt.Color(40, 55, 80));
         jLabel13.setText("Date:");
-        jPanel3.add(jLabel13, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 100, -1, -1));
+        jPanel3.add(jLabel13, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 100, -1, -1));
 
         jLabel11.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
         jLabel11.setForeground(new java.awt.Color(40, 55, 80));
         jLabel11.setText("Quantity:");
-        jPanel3.add(jLabel11, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 20, -1, -1));
+        jPanel3.add(jLabel11, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 20, -1, -1));
 
         StockOutQuantity.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
-        jPanel3.add(StockOutQuantity, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 40, 150, 40));
+        jPanel3.add(StockOutQuantity, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 40, 150, 40));
+        jPanel3.add(stockoutRefNo, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 210, 160, 40));
 
-        add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 570, 380, 240));
+        jLabel18.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        jLabel18.setForeground(new java.awt.Color(40, 55, 80));
+        jLabel18.setText("Reference Number:");
+        jPanel3.add(jLabel18, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 190, -1, -1));
+
+        cmbStockOutProduct.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
+        jPanel3.add(cmbStockOutProduct, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 40, 160, 40));
+
+        add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 540, 380, 270));
 
         jPanel4.setBackground(new java.awt.Color(18, 48, 174));
         jPanel4.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -1620,7 +1669,7 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
         jLabel4.setText("STOCK OUT ENTRY");
         jPanel8.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 10, -1, 30));
 
-        add(jPanel8, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 530, 380, 50));
+        add(jPanel8, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 500, 380, 50));
 
         jPanel5.setBackground(new java.awt.Color(18, 48, 174));
         jPanel5.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -1693,7 +1742,7 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
             btnRefresh.addActionListener(e -> {
                 animateRefreshButton();
                 loadAllInventoryData();
-                generateNextReferenceNumber();
+                generateNextStockInReferenceNumber();
             });
         }
     }
@@ -1737,6 +1786,7 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel17;
+    private javax.swing.JLabel jLabel18;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -1756,6 +1806,7 @@ public class InventoryManagementPanel extends javax.swing.JPanel {
     private javax.swing.JSeparator jSeparator3;
     private javax.swing.JPanel pnlAlert;
     private javax.swing.JPanel pnlBasta;
+    private javax.swing.JTextField stockoutRefNo;
     private javax.swing.JTable table;
     private javax.swing.JTextField txtAutoGenerateDate;
     private javax.swing.JTextField txtQuantity;
